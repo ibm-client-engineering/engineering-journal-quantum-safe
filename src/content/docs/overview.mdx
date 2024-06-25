@@ -8,7 +8,303 @@ description: How we can contain and describe this deployment to Fidelity's restr
 - POCs are built in a development account in AWS. 
 - OCP is not approved for production environments.
 - Special considerations are required for CoreOS ami
-- 
+- Fidelity adheres to role based access for all their environments. 
+
+## AWS Role perms
+<details>
+<summary><b>Required EC2 permissions for installation</b></summary>
+```tsx
+    ec2:AuthorizeSecurityGroupEgress
+    ec2:AuthorizeSecurityGroupIngress
+    ec2:CopyImage
+    ec2:CreateNetworkInterface
+    ec2:AttachNetworkInterface
+    ec2:CreateSecurityGroup
+    ec2:CreateTags
+    ec2:CreateVolume
+    ec2:DeleteSecurityGroup
+    ec2:DeleteSnapshot
+    ec2:DeleteTags
+    ec2:DeregisterImage
+    ec2:DescribeAccountAttributes
+    ec2:DescribeAddresses
+    ec2:DescribeAvailabilityZones
+    ec2:DescribeDhcpOptions
+    ec2:DescribeImages
+    ec2:DescribeInstanceAttribute
+    ec2:DescribeInstanceCreditSpecifications
+    ec2:DescribeInstances
+    ec2:DescribeInstanceTypes
+    ec2:DescribeInternetGateways
+    ec2:DescribeKeyPairs
+    ec2:DescribeNatGateways
+    ec2:DescribeNetworkAcls
+    ec2:DescribeNetworkInterfaces
+    ec2:DescribePrefixLists
+    ec2:DescribeRegions
+    ec2:DescribeRouteTables
+    ec2:DescribeSecurityGroups
+    ec2:DescribeSubnets
+    ec2:DescribeTags
+    ec2:DescribeVolumes
+    ec2:DescribeVpcAttribute
+    ec2:DescribeVpcClassicLink
+    ec2:DescribeVpcClassicLinkDnsSupport
+    ec2:DescribeVpcEndpoints
+    ec2:DescribeVpcs
+    ec2:GetEbsDefaultKmsKeyId
+    ec2:ModifyInstanceAttribute
+    ec2:ModifyNetworkInterfaceAttribute
+    ec2:RevokeSecurityGroupEgress
+    ec2:RevokeSecurityGroupIngress
+    ec2:RunInstances
+    ec2:TerminateInstances
+```
+</details>
+
+<details>
+<summary><b>Required permissions for creating network resources during installation</b></summary>
+```tsx
+    ec2:AllocateAddress
+    ec2:AssociateAddress
+    ec2:AssociateDhcpOptions
+    ec2:AssociateRouteTable
+    ec2:AttachInternetGateway
+    ec2:CreateDhcpOptions
+    ec2:CreateInternetGateway
+    ec2:CreateNatGateway
+    ec2:CreateRoute
+    ec2:CreateRouteTable
+    ec2:CreateSubnet
+    ec2:CreateVpc
+    ec2:CreateVpcEndpoint
+    ec2:ModifySubnetAttribute
+    ec2:ModifyVpcAttribute
+```
+:::note
+If you use an existing VPC, your account does not require these permissions for creating network resources.
+:::
+</details>
+
+<details>
+<summary><b>Required Elastic Load Balancing permissions (ELB) for installation</b></summary>
+```tsx
+elasticloadbalancing:AddTags
+elasticloadbalancing:ApplySecurityGroupsToLoadBalancer
+elasticloadbalancing:AttachLoadBalancerToSubnets
+elasticloadbalancing:ConfigureHealthCheck
+elasticloadbalancing:CreateLoadBalancer
+elasticloadbalancing:CreateLoadBalancerListeners
+elasticloadbalancing:DeleteLoadBalancer
+elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+elasticloadbalancing:DescribeInstanceHealth
+elasticloadbalancing:DescribeLoadBalancerAttributes
+elasticloadbalancing:DescribeLoadBalancers
+elasticloadbalancing:DescribeTags
+elasticloadbalancing:ModifyLoadBalancerAttributes
+elasticloadbalancing:RegisterInstancesWithLoadBalancer
+elasticloadbalancing:SetLoadBalancerPoliciesOfListener
+```
+</details>
+
+<details>
+<summary><b>Required Elastic Load Balancing permissions (ELBv2) for installation</b></summary>
+```tsx
+    elasticloadbalancing:AddTags
+    elasticloadbalancing:CreateListener
+    elasticloadbalancing:CreateLoadBalancer
+    elasticloadbalancing:CreateTargetGroup
+    elasticloadbalancing:DeleteLoadBalancer
+    elasticloadbalancing:DeregisterTargets
+    elasticloadbalancing:DescribeListeners
+    elasticloadbalancing:DescribeLoadBalancerAttributes
+    elasticloadbalancing:DescribeLoadBalancers
+    elasticloadbalancing:DescribeTargetGroupAttributes
+    elasticloadbalancing:DescribeTargetHealth
+    elasticloadbalancing:ModifyLoadBalancerAttributes
+    elasticloadbalancing:ModifyTargetGroup
+    elasticloadbalancing:ModifyTargetGroupAttributes
+    elasticloadbalancing:RegisterTargets
+```
+</details>
+
+<details>
+<summary><b>Required IAM permissions for installation</b></summary>
+```tsx
+    iam:AddRoleToInstanceProfile
+    iam:CreateInstanceProfile
+    iam:CreateRole
+    iam:DeleteInstanceProfile
+    iam:DeleteRole
+    iam:DeleteRolePolicy
+    iam:GetInstanceProfile
+    iam:GetRole
+    iam:GetRolePolicy
+    iam:GetUser
+    iam:ListInstanceProfilesForRole
+    iam:ListRoles
+    iam:ListUsers
+    iam:PassRole
+    iam:PutRolePolicy
+    iam:RemoveRoleFromInstanceProfile
+    iam:SimulatePrincipalPolicy
+    iam:TagRole
+```
+:::note
+If you have not created a load balancer in your AWS account, the IAM user also requires the iam:CreateServiceLinkedRole permission.
+:::
+
+</details>
+
+<details>
+<summary><b>Required Route 53 permissions for installation</b></summary>
+```tsx
+    route53:ChangeResourceRecordSets
+    route53:ChangeTagsForResource
+    route53:CreateHostedZone
+    route53:DeleteHostedZone
+    route53:GetChange
+    route53:GetHostedZone
+    route53:ListHostedZones
+    route53:ListHostedZonesByName
+    route53:ListResourceRecordSets
+    route53:ListTagsForResource
+    route53:UpdateHostedZoneComment
+```
+</details>
+
+<details>
+<summary><b>If S3 buckets are required, add these permissions.</b></summary>
+```tsx
+    s3:CreateBucket
+    s3:DeleteBucket
+    s3:GetAccelerateConfiguration
+    s3:GetBucketAcl
+    s3:GetBucketCors
+    s3:GetBucketLocation
+    s3:GetBucketLogging
+    s3:GetBucketPolicy
+    s3:GetBucketObjectLockConfiguration
+    s3:GetBucketRequestPayment
+    s3:GetBucketTagging
+    s3:GetBucketVersioning
+    s3:GetBucketWebsite
+    s3:GetEncryptionConfiguration
+    s3:GetLifecycleConfiguration
+    s3:GetReplicationConfiguration
+    s3:ListBucket
+    s3:PutBucketAcl
+    s3:PutBucketTagging
+    s3:PutEncryptionConfiguration
+```
+</details>
+
+<details>
+<summary><b>S3 permissions that cluster Operators require if S3 is needed</b></summary>
+```tsx
+    s3:DeleteObject
+    s3:GetObject
+    s3:GetObjectAcl
+    s3:GetObjectTagging
+    s3:GetObjectVersion
+    s3:PutObject
+    s3:PutObjectAcl
+    s3:PutObjectTagging
+```
+</details>
+
+<details>
+<summary><b>Required permissions to delete base cluster resources for cleanups</b></summary>
+```tsx
+    autoscaling:DescribeAutoScalingGroups
+    ec2:DeletePlacementGroup
+    ec2:DeleteNetworkInterface
+    ec2:DeleteVolume
+    elasticloadbalancing:DeleteTargetGroup
+    elasticloadbalancing:DescribeTargetGroups
+    iam:DeleteAccessKey
+    iam:DeleteUser
+    iam:ListAttachedRolePolicies
+    iam:ListInstanceProfiles
+    iam:ListRolePolicies
+    iam:ListUserPolicies
+    s3:DeleteObject
+    s3:ListBucketVersions
+    tag:GetResources
+```
+</details>
+
+<details>
+<summary><b>Required permissions to delete network resources for cleanups</b></summary>
+```tsx
+    ec2:DeleteDhcpOptions
+    ec2:DeleteInternetGateway
+    ec2:DeleteNatGateway
+    ec2:DeleteRoute
+    ec2:DeleteRouteTable
+    ec2:DeleteSubnet
+    ec2:DeleteVpc
+    ec2:DeleteVpcEndpoints
+    ec2:DetachInternetGateway
+    ec2:DisassociateRouteTable
+    ec2:ReleaseAddress
+    ec2:ReplaceRouteTableAssociation
+```
+:::note
+If you use an existing VPC, your account does not require these permissions to delete network resources. Instead, your account only requires the tag:UntagResources permission to delete network resources.
+:::
+
+</details>
+
+<details>
+<summary><b>Required permissions to delete a cluster with shared instance roles for cleanups</b></summary>
+```tsx
+iam:UntagRole
+```
+
+</details>
+
+<details>
+<summary><b>Additional IAM and S3 permissions that are required to create manifests</b></summary>
+```tsx
+    iam:DeleteAccessKey
+    iam:DeleteUser
+    iam:DeleteUserPolicy
+    iam:GetUserPolicy
+    iam:ListAccessKeys
+    iam:PutUserPolicy
+    iam:TagUser
+    s3:PutBucketPublicAccessBlock
+    s3:GetBucketPublicAccessBlock
+    s3:PutLifecycleConfiguration
+    s3:HeadBucket
+    s3:ListBucketMultipartUploads
+    s3:AbortMultipartUpload
+```
+:::note
+If you are managing your cloud provider credentials with mint mode, the IAM user also requires the iam:CreateAccessKey and iam:CreateUser permissions.
+:::
+
+</details>
+
+<details>
+<summary><b>Optional permissions for instance and quota checks for installation</b></summary>
+```tsx
+    ec2:DescribeInstanceTypeOfferings
+    servicequotas:ListAWSDefaultServiceQuotas
+```
+</details>
+
+<details>
+<summary><b>Optional permissions for the cluster owner account when installing a cluster on a shared VPC</b></summary>
+```tsx
+    sts:AssumeRole
+```
+</details>
+
+:::note
+For more details on the IAM user requirements, see https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-account.html#installing-aws-account
+:::
 
 ## Engineering infrastructure requirements
 
@@ -24,12 +320,26 @@ Below sizing are the base requirements for a extra small starter deployment.
 |--|--|--|--|--|
 | TBD * | 1 | 4 | 8G | 500GB EBS | 
 |c5.2xlarge|3|24 (8 cores x Count)|48G (16G x Count)| 100Gb EBS|
-|m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS|
-|**Totals**|7|52|152G| 1053Gb |
-
+|m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS, 200Gb EBS (additional)|
+|**Totals**|7|52|152G| 1653Gb |
 
 ## Open Questions
 
-* Pre-Reqs call for 4 vcpu and 8 gig for the infra/bastion node. Can it get by with 2 vcpu? 
-
+- Pre-Reqs call for 4 vcpu and 8 gig for the infra/bastion node. Can it get by with 2 vcpu? 
 Reasoning: There isn't many options available in AWS that offer 4x8. Mostly 2x1, 2x4, 2x 
+- Worker nodes require an extra 200Gb disk. What is this required for?
+- Can this work with EFS?
+
+## Storage considerations:
+
+Fidelity primarily uses EBS and EFS. 
+
+- Network attached (SAN) SSD at 3000 MB/sec IO (required)
+- Adding ODF into the mix would require adding more larger storage nodes
+
+
+
+Other considerations:
+
+- ![Rook-Ceph](https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/) - Less bloated version of ODF
+
