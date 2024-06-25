@@ -325,9 +325,10 @@ Below sizing are the base requirements for a extra small starter deployment.
 
 ## Open Questions
 
-* Pre-Reqs call for 4 vcpu and 8 gig for the infra/bastion node. Can it get by with 2 vcpu? 
-
+- Pre-Reqs call for 4 vcpu and 8 gig for the infra/bastion node. Can it get by with 2 vcpu? 
 Reasoning: There isn't many options available in AWS that offer 4x8. Mostly 2x1, 2x4, 2x 
+- Worker nodes require an extra 200Gb disk. What is this required for?
+- Can this work with EFS?
 
 ## Storage considerations:
 
@@ -335,6 +336,8 @@ Fidelity primarily uses EBS and EFS.
 
 - Network attached (SAN) SSD at 3000 MB/sec IO (required)
 - Adding ODF into the mix would require adding more larger storage nodes
+
+
 
 Other considerations:
 
