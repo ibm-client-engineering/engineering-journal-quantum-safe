@@ -1,0 +1,38 @@
+language: ruby
+
+branches:
+  only:
+  - main
+
+#env:
+#  - IMAGE_TAG=latest IMAGE_NAME=angel-watson-assistant-demo IBM_REGISTRY_NAMESPACE=watson-assistant
+
+#services:
+#  - docker
+
+jobs:
+  include:
+    - stage: build and deploy pages
+      before_install: 
+        - wget https://d2lang.com/install.sh -O /tmp/install.sh
+        - sed -i "s/GITHUB_TOKEN/GIT_HUB_TOKEN/" /tmp/install.sh
+        - sh /tmp/install.sh
+      install:
+        - nvm install 21.7.1
+        - yarn install
+        - yarn playwright install
+        - yarn upgrade
+      script:
+        - yarn build
+      deploy:
+      - provider: pages
+        github_url: github.ibm.com
+        github_token: $GITHUB_TOKEN
+        target_branch: gh-pages
+        skip_cleanup: true
+        local_dir: build
+        on:
+          branch: main
+
+stages:
+  - build and deploy pages

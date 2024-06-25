@@ -1,0 +1,169 @@
+{
+  "$schema": "https://frontmatter.codes/frontmatter.schema.json",
+  "frontMatter.framework.id": "astro",
+  "frontMatter.preview.host": "http://localhost:4321",
+  "frontMatter.content.publicFolder": {
+    "path": "src/assets",
+    "relative": true
+  },
+  "frontMatter.extends": [
+    ".frontmatter/starlight/contenttypes.json",
+    ".frontmatter/starlight/pagefolders.json",
+    ".frontmatter/starlight/aside.json"
+  ],
+  "frontMatter.content.pageFolders": [
+    {
+      "title": "docs",
+      "path": "[[workspace]]/src/content/docs",
+      "contentTypes": [
+        "docs"
+      ]
+    }
+  ],
+  "frontMatter.taxonomy.contentTypes": [
+    {
+      "name": "docs",
+      "previewPath": "'docs'",
+      "pageBundle": false,
+      "clearEmpty": true,
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "single": true,
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "single": true
+        },
+        {
+          "name": "editUrl",
+          "type": "string",
+          "single": true,
+          "default": true
+        },
+        {
+          "name": "head",
+          "type": "list",
+          "default": []
+        },
+        {
+          "name": "tableOfContents",
+          "type": "fields",
+          "fields": [
+            {
+              "name": "minHeadingLevel",
+              "type": "number",
+              "default": 2
+            },
+            {
+              "name": "maxHeadingLevel",
+              "type": "number",
+              "default": 3
+            }
+          ],
+          "default": {
+            "minHeadingLevel": 2,
+            "maxHeadingLevel": 3
+          }
+        },
+        {
+          "name": "template",
+          "type": "choice",
+          "choices": [
+            "doc",
+            "splash"
+          ],
+          "default": "doc"
+        },
+        {
+          "name": "hero",
+          "type": "fields",
+          "fields": [
+            {
+              "name": "title",
+              "type": "string",
+              "single": true
+            },
+            {
+              "name": "tagline",
+              "type": "string",
+              "single": true
+            },
+            {
+              "name": "image",
+              "type": "image",
+              "isPreviewImage": true
+            },
+            {
+              "name": "actions",
+              "type": "list",
+              "default": []
+            }
+          ]
+        },
+        {
+          "name": "lastUpdated",
+          "type": "datetime",
+          "default": "{{now}}"
+        },
+        {
+          "name": "prev",
+          "type": "boolean"
+        },
+        {
+          "name": "next",
+          "type": "boolean"
+        },
+        {
+          "name": "sidebar",
+          "type": "fields",
+          "fields": [
+            {
+              "name": "order",
+              "type": "number"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "single": true
+            },
+            {
+              "name": "hidden",
+              "type": "boolean"
+            },
+            {
+              "name": "badge",
+              "type": "string",
+              "single": true
+            }
+          ],
+          "default": {
+            "hidden": false,
+            "attrs": {}
+          }
+        },
+        {
+          "name": "banner",
+          "type": "fields",
+          "fields": [
+            {
+              "name": "content",
+              "type": "string",
+              "single": true,
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "pagefind",
+          "type": "boolean",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "frontMatter.git.enabled": true
+}

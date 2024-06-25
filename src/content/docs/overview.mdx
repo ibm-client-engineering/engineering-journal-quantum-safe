@@ -1,0 +1,71 @@
+---
+title: Align
+description: How we align with our customers
+---
+
+![](https://github.com/ibm-client-engineering/solution-filenet-aws/assets/125045410/712b1c30-b8d1-4c4e-979f-968d76f734ae)
+
+IBM and the client aligned on a compelling business opportunity. Additionally, the teams defined the scope to prove FileNet's capabilities and its installation, configuration, and deployment on AWS EKS. 
+
+The IBM team successfully proved the following: 
+- Our product's capabilities in cloud-native environments
+- Successful deployment and configuration of our product within the confines of the MVP principle.
+
+Additionally, the IBM team conducted interactive, hands-on keyboard training sessions encompassing a range of critical topics, including:
+- Gaining a detailed understanding of the platform, delving into its complex features and capabilities
+- Guidance on managing and configuring the product for optimal performance
+
+### Example Mermaid
+
+
+```mermaid
+graph TD
+    A[Data Collection and Integration] --> B[Entity Resolution and Linking]
+    B --> C[Event and Pattern Detection]
+    C --> D[Network Analysis]
+    D --> E[Scoring and Prioritization]
+    E --> F[Investigation and Validation]
+    F --> G[Feedback and Model Refinement]
+    G --> C
+
+    subgraph Data Sources
+        DS1[Claims Databases]
+        DS2[Policy Information]
+        DS3[Third-Party Data Providers]
+    end
+
+    subgraph Techniques
+        T1[Fuzzy Matching]
+        T2[Record Linkage]
+        T3[Machine Learning Algorithms]
+        T4[Rule-Based Systems]
+        T5[Anomaly Detection Algorithms]
+        T6[Network Graph Analysis]
+    end
+
+    DS1 --> A
+    DS2 --> A
+    DS3 --> A
+
+    T1 --> B
+    T2 --> B
+    T3 --> B
+
+    T4 --> C
+    T5 --> C
+    T3 --> C
+
+    T6 --> D
+
+    F --> FI[Field Investigators]
+    F --> ME[Medical Experts]
+    F --> LE[Law Enforcement Agencies]
+```
+
+### Example D2
+
+```d2 sketch pad=50
+direction: right
+
+Astro.Markdown -> D2 -> SVG -> Browser.Diagrams -> Astro.Markdown: {style.animated: true}
+```
