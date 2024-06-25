@@ -320,9 +320,8 @@ Below sizing are the base requirements for a extra small starter deployment.
 |--|--|--|--|--|
 | TBD * | 1 | 4 | 8G | 500GB EBS | 
 |c5.2xlarge|3|24 (8 cores x Count)|48G (16G x Count)| 100Gb EBS|
-|m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS|
-|**Totals**|7|52|152G| 1053Gb |
-
+|m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS, 200Gb EBS (additional)|
+|**Totals**|7|52|152G| 1653Gb |
 
 ## Open Questions
 
@@ -330,7 +329,14 @@ Below sizing are the base requirements for a extra small starter deployment.
 
 Reasoning: There isn't many options available in AWS that offer 4x8. Mostly 2x1, 2x4, 2x 
 
-Storage considerations:
+## Storage considerations:
 
 Fidelity primarily uses EBS and EFS. 
+
+- Network attached (SAN) SSD at 3000 MB/sec IO (required)
+- Adding ODF into the mix would require adding more larger storage nodes
+
+Other considerations:
+
+- ![Rook-Ceph](https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/) - Less bloated version of ODF
 
