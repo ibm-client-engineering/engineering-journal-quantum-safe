@@ -9,7 +9,7 @@ import d2 from "astro-d2";
 export default defineConfig({
   outDir: './build',
   site: 'https://pages.github.ibm.com/',
-  base: '/ibm-client-engineering/engineering-journal-quantum-deployment/',
+  base: '/ibm-client-engineering/engineering-journal-quantum-safe/',
   build: {
     assets: 'css'
   },
@@ -22,7 +22,7 @@ export default defineConfig({
     // Relative path to your custom CSS file
     './src/styles/css/custom.css', './src/styles/css/tailwind.css'],
     social: {
-      github: 'https://github.ibm.com/ibm-client-engineering/engineering-journal-quantum-deployment'
+      github: 'https://github.ibm.com/ibm-client-engineering/engineering-journal-quantum-safe'
     },
     // Populate sidebar directories here
     sidebar: [{
