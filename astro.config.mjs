@@ -14,7 +14,7 @@ export default defineConfig({
     assets: 'css'
   },
   integrations: [starlight({
-    title: 'Forward Foundry',
+    title: 'IBM Quantum Safe',
     logo: {
       src: './src/assets/ibm-logo-svgrepo-com.svg'
     },
@@ -29,11 +29,6 @@ export default defineConfig({
       label: 'Forward',
       autogenerate: {
         directory: 'how-we-work'
-      }
-    }, {
-      label: 'Examples',
-      autogenerate: {
-        directory: 'Examples'
       }
     },{
       label: 'QSR',
