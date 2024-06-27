@@ -1,0 +1,160 @@
+---
+title: Architecture
+description: The architecture for QSR
+---
+
+# Components
+
+- Adaptive Proxy
+- Performance test harness
+
+# Adaptive Proxy
+
+The adaptive proxy requires a docker or podman host to run the container. 
+
+For our example, we're going to set up the adaptive proxy to act as a loadbalancer for a kubernetes cluster.
+
+:::note
+useful links
+
+https://docs.docker.com/engine/install/fedora/
+
+https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=proxy-installing-adaptive
+:::
+
+## Pre-Reqs
+
+:::note
+
+Make sure the following packages are installed
+
+```tsx
+sudo dnf -y install cronie
+```
+
+:::
+
+### Installing Docker
+
+On our gateway host we are running Fedora 40 Server:
+
+```tsx
+sudo dnf remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-selinux \
+                  docker-engine-selinux \
+                  docker-engine
+
+```
+
+Set up the repository
+```tsx
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+```
+
+Install Docker Engine, containerd, and Docker Compose
+
+```tsx
+sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Add your local user to the `docker` group
+
+```tsx 
+sudo usermod -G docker kramerro
+```
+
+Start up docker
+```tsx
+sudo systemctl start docker
+```
+
+### Installing the proxy
+
+Download the Adaptive Proxy from [IBM Passport Advantage](https://www.ibm.com/software/passportadvantage/pao_customer.html)
+
+Once downloaded, the file should be named `IQSRAP_1.0_Linux_EN.zip`
+
+Extract to your gateway host
+```tsx
+[kramerro@eksa-admin ~]$ unzip IQSRAP_1.0_Linux_EN.zip
+Archive:  IQSRAP_1.0_Linux_EN.zip
+  inflating: M0J90EN/adaptiveproxy_1.0.0.tar
+```
+
+Make the adaptive proxy directory in `/opt` and extract the tar file there
+
+```tsx
+sudo tar xvf M0J90EN/adaptiveproxy_1.0.0.tar -C /opt/adaptive-proxy
+```
+
+Now run the installer script
+
+```tsx
+cd /opt/adaptive-proxy/workdir
+
+sudo ./installAdaptiveProxy.sh
+```
+
+Accept the license agreement and allow the installation to continue
+
+For now, our default proxy server will be `localhost`. So hit enter when prompted for it.
+
+For all the algorithms, just hit enter to accept the defaults.
+
+After installation, verify that the certificates have been generated
+
+```tsx
+ll certificates/ca
+
+-rw-r--rw- 1 1012 1012  635 Jun 27 11:30 CA_default.crt
+-rw-----w- 1 1012 1012  227 Jun 27 11:30 CA_default.key
+-rw-r--rw- 1 1012 1012   41 Jun 27 11:30 CA_default.srl
+-rw-r--rw- 1 1012 1012 5685 Jun 27 11:30 CA_hybrid.crt
+-rw-----w- 1 1012 1012 5458 Jun 27 11:30 CA_hybrid.key
+-rw-r--rw- 1 1012 1012   41 Jun 27 11:30 CA_hybrid.srl
+-rw-r--rw- 1 1012 1012  631 Jun 27 11:30 CA_legacy.crt
+-rw-----w- 1 1012 1012  227 Jun 27 11:30 CA_legacy.key
+-rw-r--rw- 1 1012 1012   41 Jun 27 11:30 CA_legacy.srl
+-rw-r--rw- 1 1012 1012 5502 Jun 27 11:30 CA_qsc.crt
+-rw-----w- 1 1012 1012 5295 Jun 27 11:30 CA_qsc.key
+-rw-r--rw- 1 1012 1012   41 Jun 27 11:30 CA_qsc.srl
+-rw-r--rw- 1 1012 1012  114 Jun 27 11:30 server_default.crt
+-rw-r--rw- 1 1012 1012  111 Jun 27 11:30 server_hybrid.crt
+-rw-r--rw- 1 1012 1012  111 Jun 27 11:30 server_legacy.crt
+-rw-r--rw- 1 1012 1012  102 Jun 27 11:30 server_qsc.crt
+
+ll certificates/leaf
+-rw-r--rw- 1 1012 1012  895 Jun 27 11:30 server_default.crt
+-rw----rw- 1 1012 1012  227 Jun 27 11:30 server_default.key
+-rw-r--rw- 1 1012 1012 5640 Jun 27 11:30 server_hybrid.crt
+-rw----rw- 1 1012 1012 5458 Jun 27 11:30 server_hybrid.key
+-rw-r--rw- 1 1012 1012  891 Jun 27 11:30 server_legacy.crt
+-rw----rw- 1 1012 1012  227 Jun 27 11:30 server_legacy.key
+-rw-r--rw- 1 1012 1012 5458 Jun 27 11:30 server_qsc.crt
+-rw----rw- 1 1012 1012 5295 Jun 27 11:30 server_qsc.key
+```
+
+Finally verify the images are available
+
+```tsx
+docker images
+REPOSITORY       TAG          IMAGE ID       CREATED       SIZE
+adaptive-proxy   ubi-9.3      99c3cd5ad80f   5 weeks ago   277MB
+adaptive-proxy   qscopenssl   6609ea524cdf   5 weeks ago   282MB
+```
+
+
+The Adaptive Proxy supports two patterns of TLS handling:
+
+- edge termination: In an edge scenario, Adaptive Proxy terminates the SSL connection from the client and initiates a new or no SSL connection to the backend/upstream servers.
+- re-encrypt: In a re-encrypt scenario, Adaptive Proxy decrypts the client request, then encrypts it again when sending to the backend/upstream using the respective backend/upstream server certificate and keys as per the configuration provided.
+
+We'll check them both out and see which one works better for our use case.
+
