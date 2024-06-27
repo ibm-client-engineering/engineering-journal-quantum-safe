@@ -343,3 +343,32 @@ Other considerations:
 
 - ![Rook-Ceph](https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/) - Less bloated version of ODF
 
+## Components
+These are some components of this solution that are available from IBM Passport Advantage:
+
+### Bill of Materials
+
+- IBM Quantum Safe Remediator Adaptive Proxy ([QSR](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x))
+- IBM Quantum Safe Explorer ([QSE](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x)) 
+- QSPM 
+- IBM Quantum Safe Advisor (QSA)
+
+#### Constraints
+
+- QSR
+  - Requires docker or podman
+  - Presumably can be deployed to OCP or any kubernetes as it is a container
+  - Using the Adaptive Proxy it can act as a dynamic TLS termination point and re-encrypts connections with quantum-safe encryption
+
+- QSE
+  - Runs as a local service on a user's desktop.
+  - Rapid deployment. 
+  - Supports MacOS and Windows services. 
+  - Has a CLI to locally interact with the local service.
+  - VSCode plugin to automatically scan and identify vulnerable pre-quantum algorithms in a user's code
+
+- QSA 
+  - TBD
+
+- QSPM
+  - Current specs require OCP cluster
