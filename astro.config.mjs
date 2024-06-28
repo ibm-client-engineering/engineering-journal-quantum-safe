@@ -35,6 +35,11 @@ export default defineConfig({
       autogenerate: {
         directory: 'QSR'
       }
+    },{
+      label: 'QSE',
+      autogenerate: {
+        directory: 'QSE'
+      }
     }, {
       label: 'Reference',
       autogenerate: {

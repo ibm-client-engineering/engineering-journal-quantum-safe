@@ -1,0 +1,151 @@
+---
+title: Installation
+description: QSE installation
+---
+
+:::note
+Useful links
+
+https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=explorer-installing-quantum-safe-macos
+
+:::
+
+## Downloading
+
+You can find the required installation files for your OS of choice on IBM's Passport Advantage. The scope of this installation will cover MacOS.
+
+![CleanShot 2024-06-28 at 10 52 11](https://media.github.ibm.com/user/20330/files/a32c6034-49da-466e-b21b-57fecf818d54)
+
+It's important to note that these files all use the same name 
+
+```tsx
+-rw-r--r--@    1 kramerro  staff    35M Jun 26 15:59 IIQSE0_1.0.1_MP_EN(2).zip
+-rw-r--r--@    1 kramerro  staff    73M Jun 26 15:58 IIQSE0_1.0.1_MP_EN.zip
+-rw-r--r--@    1 kramerro  staff   446K Jun 26 15:58 IIQSE0_1.0.1_MP_EN(1).zip
+```
+
+Extracted they create the following directories
+
+```zsh
+➜  QSE git:(ross-updates) ✗ tree
+.
+├── M0GT4EN
+│   └── IBM Quantum Safe Explorer-1.0.1.pkg
+├── M0GT5EN
+│   └── ibm-quantum-safe-explorer-1.0.1.vsix
+└── M0GT6EN
+    ├── LicenseAcceptance.config
+    ├── cli.sh
+    ├── la_home
+    │   ├── LA_cs
+    │   ├── LA_de
+    │   ├── LA_el
+    │   ├── LA_en
+    │   ├── LA_es
+    │   ├── LA_fr
+    │   ├── LA_in
+    │   ├── LA_it
+    │   ├── LA_ja
+    │   ├── LA_ko
+    │   ├── LA_lt
+    │   ├── LA_pl
+    │   ├── LA_pt
+    │   ├── LA_ru
+    │   ├── LA_sl
+    │   ├── LA_tr
+    │   ├── LA_zh
+    │   ├── LA_zh_TW
+    │   └── notices
+    ├── lib
+    │   ├── SparseBitSet-1.2.jar
+    │   ├── apiguardian-api-1.1.2.jar
+    │   ├── commons-cli-1.5.0.jar
+    │   ├── commons-codec-1.15.jar
+    │   ├── commons-collections4-4.4.jar
+    │   ├── commons-compress-1.21.jar
+    │   ├── commons-io-2.11.0.jar
+    │   ├── commons-lang3-3.12.0.jar
+    │   ├── commons-math3-3.6.1.jar
+    │   ├── commons-text-1.10.0.jar
+    │   ├── curvesapi-1.07.jar
+    │   ├── gson-2.10.1.jar
+    │   ├── hamcrest-core-1.1.jar
+    │   ├── json-simple-1.1.1.jar
+    │   ├── jsoup-1.16.1.jar
+    │   ├── junit-4.10.jar
+    │   ├── junit-platform-commons-1.9.0.jar
+    │   ├── license_metric_logger-2.1.2.202009181115.jar
+    │   ├── log4j-api-2.18.0.jar
+    │   ├── log4j-core-2.20.0.jar
+    │   ├── poi-5.2.3.jar
+    │   ├── poi-ooxml-5.2.3.jar
+    │   ├── poi-ooxml-lite-5.2.3.jar
+    │   ├── quantum-safe-sca-tng-0.0.1-SNAPSHOT.jar
+    │   ├── slf4j-api-1.7.36.jar
+    │   ├── sqlite-jdbc-3.42.0.0.jar
+    │   ├── tika-core-2.4.1.jar
+    │   └── xmlbeans-5.1.1.jar
+    ├── swidtag
+    │   └── ibm.com_IBM_Quantum_Safe_Explorer-1.0.1.swidtag
+    └── version
+
+7 directories, 53 files
+```
+
+## Installing the Services
+
+:::note
+This guide assumes the user's desktop is MacOS
+:::
+
+In our extracted directory, run the following command with `sudo` and enter your admin password when prompted.
+
+```zsh
+sudo installer -pkg M0GT4EN/IBM\ Quantum\ Safe\ Explorer-1.0.1.pkg -target /Applications
+Password:
+installer: Package name is IBM Quantum Safe Explorer
+installer: Installing at base path /
+installer: The install was successful.
+```
+:::note
+
+Make sure you have openjdk-17 installed.
+
+```zsh
+brew install openjdk@17
+```
+If you have other versions of Java installed, you might need to add this to your path:
+
+```zsh
+echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
+
+. ~/.zshrc
+```
+
+
+
+
+:::
+Locate the desktop shortcut for `IBM Quantum Safe Explorer` and kick it off.
+
+![CleanShot 2024-06-28 at 11 38 01](https://media.github.ibm.com/user/20330/files/3d0657f2-e733-483c-b835-22b091617814)
+
+You should see the following windows pop up:
+![CleanShot 2024-06-28 at 11 51 21](https://media.github.ibm.com/user/20330/files/86bf663f-d52f-4c4d-9c7c-316d9968fad4)
+Make sure to click `Accept`
+
+The QSE service should now be running.
+
+![CleanShot 2024-06-28 at 11 54 23](https://media.github.ibm.com/user/20330/files/16be65f0-e686-4568-a219-65aab92bc296)
+
+You should be safe to close this window as the service will run in the background.
+
+## Installing the CLI
+
+Change directory to `M0GT6EN` where ever you had it extracted and run the following command:
+
+```zsh
+sed -i 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance.config
+```
+
+The cli is really just a shell script that runs relative to where you extracted the file.
