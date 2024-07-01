@@ -3,8 +3,7 @@ title: Installation
 description: QSE installation
 ---
 
-:::note
-Useful links
+:::note[Useful links]
 
 https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=explorer-installing-quantum-safe-macos
 
@@ -122,9 +121,6 @@ echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
 . ~/.zshrc
 ```
 
-
-
-
 :::
 Locate the desktop shortcut for `IBM Quantum Safe Explorer` and kick it off.
 
@@ -138,7 +134,9 @@ The QSE service should now be running.
 
 ![CleanShot 2024-06-28 at 11 54 23](https://media.github.ibm.com/user/20330/files/16be65f0-e686-4568-a219-65aab92bc296)
 
-You should be safe to close this window as the service will run in the background.
+:::caution[The cake is a lie.]
+Do not close this window as apparently it DOES NOT continue running in the background.
+:::
 
 ## Installing the CLI
 
@@ -149,3 +147,56 @@ sed -i 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance
 ```
 
 The cli is really just a shell script that runs relative to where you extracted the file.
+
+## Installing VSCode plugin
+
+:::note
+Assuming MacOS
+
+Make sure you have the `code` cli for MacOS enabled. This is how you do [that](https://code.visualstudio.com/docs/setup/mac)
+:::
+
+Change directory to where ever you extracted the extension
+
+```zsh
+cd M0GT5EN
+```
+
+Install the extension
+```zsh
+code --install-extension ibm-quantum-safe-explorer-1.0.1.vsix 
+Installing extensions...
+Extension 'ibm-quantum-safe-explorer-1.0.1.vsix' was successfully installed.
+```
+
+In your running VSCode instance, click the `Extensions` icon in the left-hand side bar and select `IBM Quantum Safe Explorer`
+
+![CleanShot 2024-07-01 at 10 54 57](https://media.github.ibm.com/user/20330/files/8fb753bb-6c6f-4fca-9ee2-6db66bb2d98f)
+
+
+Click on the settings for the extension
+![CleanShot 2024-07-01 at 10 57 26](https://media.github.ibm.com/user/20330/files/36c11a60-4569-437e-b4bb-20e806f08db4)
+
+Per the current [guide](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=vsce-configuring-quantum-safe-explorer-visual-studio-code-extension), the following settings must be configured:
+
+:::note
+Currently as of 1.0.x only `localhost` is supported as `qs-explorer.hostname`.
+:::
+
+The following configuration settings should be followed:
+
+Required settings:
+
+- **qs-explorer.hostname** – Enter the hostname of the IBM Quantum Safe Explorer API server. Currently only localhost is supported.
+- **qs-explorer.sourceFileExtensions** – Enter the list of source file types to be scanned. For example, .java, .py, and so on.
+
+sourceFileExtensions would be edited in the setting json. They should currently default to the following supported extensions for code scanning:
+```json
+    "qs-explorer.sourceFileExtensions": [
+        ".java",
+        ".jar",
+        ".dart",
+        ".py",
+        ".c"
+    ]
+```
