@@ -1,0 +1,51 @@
+---
+title: Scanning
+description: QSE Usage
+---
+
+## Scanning in VSCode
+
+:::note[Useful Links]
+
+Initiating scans as described [here](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=extension-initiating-scan)
+
+:::
+
+### Kicking off the scan and seeing results
+
+Let's scan the code base for the `cli` for QSE
+
+In our example, we've created a directory called `QSE` and extracted all the installation elements of QSE.
+
+![CleanShot 2024-07-02 at 16 19 35](https://media.github.ibm.com/user/20330/files/f5ea5ac5-531b-4ad2-84a7-315cc739a34e)
+
+Open that directory in VSCode.
+
+```zsh
+cd QSE
+
+code .
+```
+![CleanShot 2024-07-02 at 16 21 13](https://media.github.ibm.com/user/20330/files/22d897fd-140f-4ce4-8d39-a9ba55744c65)
+
+On VSCode for MacOS, open a new terminal in the code window. This can be done with the following key combo: Ctrl-Shift-Backtick(`)
+
+![CleanShot 2024-07-02 at 16 22 39](https://media.github.ibm.com/user/20330/files/4e7aa8b7-37e5-4915-81bd-73ad33e2f9e7)
+
+Press Ctlr-Shift-P to open the Command Palette and search for `Quantum Safe Explorer`. Select Quantum Safe Explorer Scan.
+
+![CleanShot 2024-07-02 at 11 56 18](https://media.github.ibm.com/user/20330/files/4ad0d900-f57f-488f-be45-8a8f57ed9bb6)
+
+The following notification should pop up
+
+![CleanShot 2024-07-02 at 16 25 12](https://media.github.ibm.com/user/20330/files/9ce468f9-9a57-483d-ba89-70e33a86bd9b)
+
+Let it scan until it completes.
+
+When the scan completes, you should see the following directories show up in the Explorer window of VSCode
+
+![CleanShot 2024-07-02 at 16 29 50](https://media.github.ibm.com/user/20330/files/fddaefff-0770-4c9f-a5f0-14c780e5c851)
+
+We should now see the QUANTUM SAFE EXPLORER DASHBOARD populated with pretty graphs and charts.
+
+![CleanShot 2024-07-02 at 16 32 29](https://media.github.ibm.com/user/20330/files/53f3a9c6-f816-4db6-ad15-d8b3dfbfe9f3)
