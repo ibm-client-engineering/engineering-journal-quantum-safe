@@ -9,21 +9,146 @@ https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=explo
 
 :::
 
-## Downloading
+## Pre-Reqs
 
-You can find the required installation files for your OS of choice on IBM's Passport Advantage. The scope of this installation will cover MacOS.
+For any installation, in order to use the VSCode plugin, you need to install VSCode.
+
+- OS: Windows 10 or 11 or MacOS
+- RAM: 16 Gigs
+- OpenJDK 17
+
+### Installing VSCode for Windows
+
+Grab VSCode for windows from [here](https://code.visualstudio.com/download)
+
+Make sure you download the system installer
+
+![CleanShot 2024-05-02 at 16 57 00](https://media.github.ibm.com/user/20330/files/319efcf7-1a81-4189-b01b-137519f31a6a)
+
+Similarly if you are on MacOS
+
+![CleanShot 2024-07-03 at 14 34 05](https://media.github.ibm.com/user/20330/files/5a705c00-6c11-4627-8717-df10b5633f10)
+
+File will be located in your Downloads folder. 
+
+![CleanShot 2024-07-03 at 14 38 41](https://media.github.ibm.com/user/20330/files/d886e33b-18e6-4c44-a36f-a02d6a1cc1c4)
+
+Double click it and install it to this following path
+
+![CleanShot 2024-05-02 at 16 45 44](https://media.github.ibm.com/user/20330/files/9b97bfdf-2cbe-4699-9e01-adc2f06ac86b)
+
+![CleanShot 2024-05-02 at 16 47 34](https://media.github.ibm.com/user/20330/files/8ae90a57-64e1-4ccd-a456-61b3695387b9)
+
+### Installing OpenJDK for Windows
+
+Microsoft's OpenJDK 17 can be found [here](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
+
+Download it [here](https://aka.ms/download-jdk/microsoft-jdk-17.0.11-windows-x64.msi)
+
+Go to your `Downloads` folder and double click the `microsoft-jdk-17.0.11-windows-x64.msi` file there.
+
+Let it set the JAVA_HOME var and click `Next` then click `Install`.
+
+![CleanShot 2024-07-03 at 15 15 19](https://media.github.ibm.com/user/20330/files/5ad1eafd-aba4-4372-ab46-8cbfc36ca91f)
+
+## Downloading QSE
+
+You can find the required installation files for your OS of choice on IBM's Passport Advantage. Or if you're an IBM Employee, you can find it [here](https://w3south-limited-use.cpc.ibm.com/software/xl/download/ticket.wss).
 
 ![CleanShot 2024-06-28 at 10 52 11](https://media.github.ibm.com/user/20330/files/a32c6034-49da-466e-b21b-57fecf818d54)
 
 It's important to note that these files all use the same name 
 
-```tsx
+**Windows**
+![CleanShot 2024-07-03 at 14 54 19](https://media.github.ibm.com/user/20330/files/ad11406f-5ce7-45e8-9bbe-256d697a0bfb)
+
+
+**MacOS**
+```tsx[macos]
 -rw-r--r--@    1 kramerro  staff    35M Jun 26 15:59 IIQSE0_1.0.1_MP_EN(2).zip
 -rw-r--r--@    1 kramerro  staff    73M Jun 26 15:58 IIQSE0_1.0.1_MP_EN.zip
 -rw-r--r--@    1 kramerro  staff   446K Jun 26 15:58 IIQSE0_1.0.1_MP_EN(1).zip
 ```
 
-Extracted they create the following directories
+Extract them all to the same folder in Windows or unzip them in MacOS
+
+**Windows**
+![CleanShot 2024-07-03 at 14 56 37](https://media.github.ibm.com/user/20330/files/20c72462-005c-4202-a643-d8f79b39d528)
+
+File listing in Windows
+
+```powershell
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN> tree /F
+Folder PATH listing
+Volume serial number is 1EA9-8239
+C:.
+├───M0GT5EN
+│       ibm-quantum-safe-explorer-1.0.1.vsix
+│
+├───M0GT6EN
+│   │   cli.sh
+│   │   LicenseAcceptance.config
+│   │   version
+│   │
+│   ├───la_home
+│   │       LA_cs
+│   │       LA_de
+│   │       LA_el
+│   │       LA_en
+│   │       LA_es
+│   │       LA_fr
+│   │       LA_in
+│   │       LA_it
+│   │       LA_ja
+│   │       LA_ko
+│   │       LA_lt
+│   │       LA_pl
+│   │       LA_pt
+│   │       LA_ru
+│   │       LA_sl
+│   │       LA_tr
+│   │       LA_zh
+│   │       LA_zh_TW
+│   │       notices
+│   │
+│   ├───lib
+│   │       apiguardian-api-1.1.2.jar
+│   │       commons-cli-1.5.0.jar
+│   │       commons-codec-1.15.jar
+│   │       commons-collections4-4.4.jar
+│   │       commons-compress-1.21.jar
+│   │       commons-io-2.11.0.jar
+│   │       commons-lang3-3.12.0.jar
+│   │       commons-math3-3.6.1.jar
+│   │       commons-text-1.10.0.jar
+│   │       curvesapi-1.07.jar
+│   │       gson-2.10.1.jar
+│   │       hamcrest-core-1.1.jar
+│   │       json-simple-1.1.1.jar
+│   │       jsoup-1.16.1.jar
+│   │       junit-4.10.jar
+│   │       junit-platform-commons-1.9.0.jar
+│   │       license_metric_logger-2.1.2.202009181115.jar
+│   │       log4j-api-2.18.0.jar
+│   │       log4j-core-2.20.0.jar
+│   │       poi-5.2.3.jar
+│   │       poi-ooxml-5.2.3.jar
+│   │       poi-ooxml-lite-5.2.3.jar
+│   │       quantum-safe-sca-tng-0.0.1-SNAPSHOT.jar
+│   │       slf4j-api-1.7.36.jar
+│   │       SparseBitSet-1.2.jar
+│   │       sqlite-jdbc-3.42.0.0.jar
+│   │       tika-core-2.4.1.jar
+│   │       xmlbeans-5.1.1.jar
+│   │
+│   └───swidtag
+│           ibm.com_IBM_Quantum_Safe_Explorer-1.0.1.swidtag
+│
+└───M0GT7EN
+        IBM Quantum Safe Explorer.exe
+```
+
+File listing in MacOS
 
 ```zsh
 ➜  QSE git:(ross-updates) ✗ tree
@@ -93,9 +218,33 @@ Extracted they create the following directories
 
 ## Installing the Services
 
-:::note
-This guide assumes the user's desktop is MacOS
-:::
+### Windows
+
+```powershell
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN> cd .\M0GT7EN\
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN\M0GT7EN>
+
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN\M0GT7EN> & '.\IBM Quantum Safe Explorer.exe'
+
+```
+
+The following window will pop up. Go with all the defaults.
+
+![CleanShot 2024-07-03 at 15 24 55](https://media.github.ibm.com/user/20330/files/b98f0a9d-7ce8-4775-aca7-dbd6f7592411)
+
+When installation is complete, the following window will pop up. Click `Finish` and allow it to start up the service.
+
+![CleanShot 2024-07-03 at 15 25 55](https://media.github.ibm.com/user/20330/files/ad0d786e-3b47-4cbe-b676-8939e0fb298b)
+
+Click `Accept`
+![CleanShot 2024-07-03 at 15 27 59](https://media.github.ibm.com/user/20330/files/5f92b409-e776-4e49-83b5-13e8653f6fa7)
+
+Once it's running, don't close the window.
+
+![CleanShot 2024-07-03 at 15 32 04](https://media.github.ibm.com/user/20330/files/ddd0d97f-f669-4ad4-8bfd-b4a6e57429de)
+
+
+### MacOS
 
 In our extracted directory, run the following command with `sudo` and enter your admin password when prompted.
 
@@ -151,12 +300,25 @@ The cli is really just a shell script that runs relative to where you extracted 
 ## Installing VSCode plugin
 
 :::note
-Assuming MacOS
 
-Make sure you have the `code` cli for MacOS enabled. This is how you do [that](https://code.visualstudio.com/docs/setup/mac)
+If using MacOS, make sure you have the `code` cli for MacOS enabled. This is how you do [that](https://code.visualstudio.com/docs/setup/mac)
 :::
 
 Change directory to where ever you extracted the extension
+
+**Windows**
+
+```powershell
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN> cd .\M0GT5EN\
+```
+Install the extension
+```
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN\M0GT5EN> code --install-extension ibm-quantum-safe-explorer-1.0.1.vsix
+Installing extensions...
+Extension 'ibm-quantum-safe-explorer-1.0.1.vsix' was successfully installed.
+```
+
+**MacOS**
 
 ```zsh
 cd M0GT5EN
