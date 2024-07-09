@@ -17,3 +17,183 @@ The adaptive proxy configuration consists of the following files:
 - `adaptive.proxy.upstream.conf`
 - `adaptive.proxy.curvemap`
 - `adaptive.proxy.passthrough.conf`
+
+## Example setup
+
+### Build a test site with Astro and Starlight
+
+On our Linux host (Ubuntu 24.0.4 LTS), let's install httpd and npm, install corepack, and enable yarn.
+
+```tsx
+apt-get -y install apache2
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+
+sudo apt-get install -y nodejs
+
+corepack enable
+```
+
+Now let's build an Astro site with a Starlight template.
+
+```tsx
+yarn create astro --install --no-git --typescript relaxed --template starlight /var/www/html/test-app
+```
+
+This will create a directory called `/var/www/html/test-app`
+
+#### Build the test site
+
+Go into `test-app` and update the `astro.config.mjs` with the following:
+
+```js
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+
+// https://astro.build/config
+export default defineConfig({
+    outDir: './build',
+    build: {
+        assets: 'css'  
+    }, 
+    integrations: [
+        starlight({
+            title: 'My Docs',
+            social: {
+                github: 'https://github.com/withastro/starlight',
+            },
+            sidebar: [
+                {
+                    label: 'Guides',
+                    items: [
+                        // Each item here is one entry in the navigation menu.
+                        { label: 'Example Guide', slug: 'guides/example' },
+                    ],
+                },{
+                    label: 'Reference',
+                    autogenerate: { directory: 'reference' },
+                },
+            ],
+        }),
+    ],
+});
+```
+Now run the build
+
+```tsx
+yarn build
+
+```
+
+This will build a viable site in `/var/www/html/test-app/build`
+
+#### Update apache config
+
+create a file called `/etc/apache2/sites-available/test-site.conf`
+
+Since we're running this in IBM Fyre, we're going to use the FQDN of our host here.
+
+```
+Listen 8080
+
+<VirtualHost *:8080>
+    DocumentRoot "/var/www/html/test-app/build"
+    ServerName apache-host01.fyre.ibm.com
+
+    # Other directives here
+</VirtualHost>
+```
+
+Enable the new config
+
+```tsx
+cd /etc/apache2/sites-enabled
+
+ln -s ../sites-available/test-site.conf
+```
+
+Now restart apache2
+```tsx
+sudo systemctl restart apache2
+
+```
+
+Verify the site is now up
+
+![CleanShot 2024-07-09 at 13 34 01](https://media.github.ibm.com/user/20330/files/5cd5b859-29ca-41d2-a57e-50fbdb8bc135)
+
+We set our test site to port 8080.
+
+### Deploy the proxy
+
+After following the instructions to install the Adaptive Proxy [here](../01_installation/#installing-the-proxy)
+
+Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.conf`
+
+```tsx
+# IBM Confidential
+# PID: 5900-B8I
+# Copyright (c) IBM Corp. 2024
+
+# Nginx Documentation: https://nginx.org/en/docs/http/ngx_http_core_module.html
+# Location directive documentation: https://nginx.org/en/docs/http/ngx_http_core_module.html#location
+# file path in server: /etc/nginx/conf.d/location.conf
+
+
+location / {
+    proxy_pass http://apache-host01.fyre.ibm.com:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
+
+Start up the adaptive proxy
+
+```tsx
+cd /opt/adaptive-proxy/workdir
+
+./runAdaptiveProxyServer.sh
+```
+
+Proxy should come up and our test site should be available now
+
+![CleanShot 2024-07-09 at 13 49 44](https://media.github.ibm.com/user/20330/files/c12f70e5-8ae5-4272-8c49-0b6c814a2316)
+
+
+In our case, we're pointing the proxy_pass to the FQDN virtual host we configured on our web server.
+
+
+:::note[How it works]
+The magic is the PORT. You must go to the URL at port 8443 which is where the proxy listens.
+
+In our case, to get to the proxied site:
+
+https://dockerbot21.fyre.ibm.com:8443/
+
+dockerbot21 is our docker host in fyre. His FQDN is `dockerbot21.fyre.ibm.com`
+
+Our apache host is `apache-host01.fyre.ibm.com`
+
+:::
+
+```d2 sketch pad=50
+direction: left
+dockerbot1: "dockerbot21\n(adaptive proxy)\nTLS encryption\n happens here" {
+  style.fill: transparent
+  width: 141
+  height: 95
+}
+Image: "" {
+  icon: https://icons.terrastruct.com/aws/_General/Users_light-bg.svg
+  shape: image
+}
+Image -> dockerbot1: TLS
+Square: "apache-host01\n(example site)\nNo TLS" {
+  style.fill: transparent
+  width: 142
+  height: 95
+}
+dockerbot1 -> Square: "No-TLS\n"
+Square -> dockerbot1: "No-TLS\n"
+dockerbot1 -> Image: TLS
+```
