@@ -178,8 +178,10 @@ Our apache host is `apache-host01.fyre.ibm.com`
 
 ```d2 sketch pad=50
 direction: left
-dockerbot1: "dockerbot21\n(adaptive proxy)\nTLS encryption\n happens here" {
+dockerbot1: "dockerbot21:8443\n(adaptive proxy)\nTLS encryption\n happens here" {
   style.fill: transparent
+  style.font-size: 12
+  style.font: mono
   width: 141
   height: 95
 }
@@ -190,7 +192,9 @@ Image: "" {
 Image -> dockerbot1: TLS
 Square: "apache-host01\n(example site)\nNo TLS" {
   style.fill: transparent
-  width: 142
+  style.font-size: 12
+  style.font: mono
+  width: 141
   height: 95
 }
 dockerbot1 -> Square: "No-TLS\n"
