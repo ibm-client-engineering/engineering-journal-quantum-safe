@@ -1,0 +1,36 @@
+---
+title: Installation
+description: QSR Performance Test Harness Installation
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+# Performance Test Harness
+
+:::note[Useful Links]
+
+A lot of info cribbed from [here](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=harness-installing-performance-test)
+
+:::
+
+## Pre-Reqs
+
+- [Docker](https://docs.docker.com/engine/install/) 
+- `jq`
+- `bc`
+
+### Installing pre-requisite packages
+
+<Tabs syncKey="OS">
+  <TabItem label="Red Hat/CentOS">
+```tsx
+sudo dnf -y install jq bc
+```
+</TabItem>
+<TabItem label="Ubuntu/Debian">
+```tsx
+sudo apt-get -y update
+sudo apt-get -y install jq bc
+```
+</TabItem>
+</Tabs>
