@@ -3,6 +3,8 @@ title: Installation
 description: QSE installation
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 :::note[Useful links]
 
 https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x?topic=explorer-installing-quantum-safe-macos
@@ -17,20 +19,15 @@ For any installation, in order to use the VSCode plugin, you need to install VSC
 - RAM: 16 Gigs
 - OpenJDK 17
 
-### Installing VSCode for Windows
+### Installing VSCode
 
+<Tabs syncKey="OS">
+<TabItem label="Windows">
 Grab VSCode for windows from [here](https://code.visualstudio.com/download)
 
 Make sure you download the system installer
 
 ![CleanShot 2024-05-02 at 16 57 00](https://media.github.ibm.com/user/20330/files/319efcf7-1a81-4189-b01b-137519f31a6a)
-
-Similarly if you are on MacOS
-
-![CleanShot 2024-07-03 at 14 34 05](https://media.github.ibm.com/user/20330/files/5a705c00-6c11-4627-8717-df10b5633f10)
-
-File will be located in your Downloads folder. 
-
 ![CleanShot 2024-07-03 at 14 38 41](https://media.github.ibm.com/user/20330/files/d886e33b-18e6-4c44-a36f-a02d6a1cc1c4)
 
 Double click it and install it to this following path
@@ -39,7 +36,22 @@ Double click it and install it to this following path
 
 ![CleanShot 2024-05-02 at 16 47 34](https://media.github.ibm.com/user/20330/files/8ae90a57-64e1-4ccd-a456-61b3695387b9)
 
-### Installing OpenJDK for Windows
+</TabItem>
+<TabItem label="MacOS">
+
+Grab VSCode for MacOS from [here](https://code.visualstudio.com/download)
+
+![CleanShot 2024-07-03 at 14 34 05](https://media.github.ibm.com/user/20330/files/5a705c00-6c11-4627-8717-df10b5633f10)
+
+File will be located in your Downloads folder. 
+
+
+</TabItem>
+</Tabs>
+
+### Installing OpenJDK
+<Tabs syncKey="OS">
+<TabItem label="Windows">
 
 Microsoft's OpenJDK 17 can be found [here](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17)
 
@@ -51,6 +63,24 @@ Let it set the JAVA_HOME var and click `Next` then click `Install`.
 
 ![CleanShot 2024-07-03 at 15 15 19](https://media.github.ibm.com/user/20330/files/5ad1eafd-aba4-4372-ab46-8cbfc36ca91f)
 
+</TabItem>
+<TabItem label="MacOS">
+
+Make sure you have openjdk-17 installed.
+
+```zsh
+brew install openjdk@17
+```
+If you have other versions of Java installed, you might need to add this to your path:
+
+```zsh
+echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
+
+. ~/.zshrc
+```
+</TabItem>
+</Tabs>
+
 ## Downloading QSE
 
 You can find the required installation files for your OS of choice on IBM's Passport Advantage. Or if you're an IBM Employee, you can find it [here](https://w3south-limited-use.cpc.ibm.com/software/xl/download/ticket.wss).
@@ -59,23 +89,16 @@ You can find the required installation files for your OS of choice on IBM's Pass
 
 It's important to note that these files all use the same name 
 
-**Windows**
+<Tabs syncKey="OS">
+<TabItem label="Windows">
+
 ![CleanShot 2024-07-03 at 14 54 19](https://media.github.ibm.com/user/20330/files/ad11406f-5ce7-45e8-9bbe-256d697a0bfb)
 
+Extract them all to the same folder
 
-**MacOS**
-```tsx[macos]
--rw-r--r--@    1 kramerro  staff    35M Jun 26 15:59 IIQSE0_1.0.1_MP_EN(2).zip
--rw-r--r--@    1 kramerro  staff    73M Jun 26 15:58 IIQSE0_1.0.1_MP_EN.zip
--rw-r--r--@    1 kramerro  staff   446K Jun 26 15:58 IIQSE0_1.0.1_MP_EN(1).zip
-```
-
-Extract them all to the same folder in Windows or unzip them in MacOS
-
-**Windows**
 ![CleanShot 2024-07-03 at 14 56 37](https://media.github.ibm.com/user/20330/files/20c72462-005c-4202-a643-d8f79b39d528)
 
-File listing in Windows
+File listing
 
 ```powershell
 PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN> tree /F
@@ -147,8 +170,18 @@ C:.
 └───M0GT7EN
         IBM Quantum Safe Explorer.exe
 ```
+</TabItem>
 
-File listing in MacOS
+<TabItem label="MacOS">
+```tsx[macos]
+-rw-r--r--@    1 kramerro  staff    35M Jun 26 15:59 IIQSE0_1.0.1_MP_EN(2).zip
+-rw-r--r--@    1 kramerro  staff    73M Jun 26 15:58 IIQSE0_1.0.1_MP_EN.zip
+-rw-r--r--@    1 kramerro  staff   446K Jun 26 15:58 IIQSE0_1.0.1_MP_EN(1).zip
+```
+
+Unzip them all to the same folder
+
+File listing
 
 ```zsh
 ➜  QSE git:(ross-updates) ✗ tree
@@ -216,8 +249,13 @@ File listing in MacOS
 7 directories, 53 files
 ```
 
+</TabItem>
+</Tabs>
+
 ## Installing the Services
 
+<Tabs syncKey="OS">
+<TabItem label="Windows">
 ### Windows
 
 ```powershell
@@ -243,7 +281,9 @@ Once it's running, don't close the window.
 
 ![CleanShot 2024-07-03 at 15 32 04](https://media.github.ibm.com/user/20330/files/ddd0d97f-f669-4ad4-8bfd-b4a6e57429de)
 
+</TabItem>
 
+<TabItem label="MacOS">
 ### MacOS
 
 In our extracted directory, run the following command with `sudo` and enter your admin password when prompted.
@@ -257,18 +297,6 @@ installer: The install was successful.
 ```
 :::note
 
-Make sure you have openjdk-17 installed.
-
-```zsh
-brew install openjdk@17
-```
-If you have other versions of Java installed, you might need to add this to your path:
-
-```zsh
-echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
-
-. ~/.zshrc
-```
 
 :::
 Locate the desktop shortcut for `IBM Quantum Safe Explorer` and kick it off.
@@ -286,6 +314,8 @@ The QSE service should now be running.
 :::caution[The cake is a lie.]
 Do not close this window as apparently it DOES NOT continue running in the background.
 :::
+</TabItem>
+</Tabs>
 
 ## Installing the CLI
 

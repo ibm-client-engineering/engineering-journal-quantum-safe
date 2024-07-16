@@ -1,6 +1,6 @@
 ---
 title: Opportunity Overview
-description: How we can contain and describe this deployment to Fidelity's restricted environment
+description: How we can contain and describe this deployment to client's restricted environment
 ---
 
 ## Security posture
@@ -8,7 +8,7 @@ description: How we can contain and describe this deployment to Fidelity's restr
 - POCs are built in a development account in AWS. 
 - OCP is not approved for production environments.
 - Special considerations are required for CoreOS ami
-- Fidelity adheres to role based access for all their environments. 
+- Client adheres to role based access for all their environments. 
 
 ## AWS Role perms
 <details>
@@ -332,7 +332,7 @@ Reasoning: There isn't many options available in AWS that offer 4x8. Mostly 2x1,
 
 ## Storage considerations:
 
-Fidelity primarily uses EBS and EFS. 
+client primarily uses EBS and EFS. 
 
 - Network attached (SAN) SSD at 3000 MB/sec IO (required)
 - Adding ODF into the mix would require adding more larger storage nodes

@@ -1,0 +1,116 @@
+---
+title: Installation
+description: QSR Performance Test Harness Installation
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+# Performance Test Harness
+
+:::note[Useful Links]
+
+A lot of info cribbed from [here](https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=harness-installing-performance-test)
+
+:::
+
+## Pre-Reqs
+
+- [Docker](https://docs.docker.com/engine/install/) 
+- `jq`
+- `bc`
+
+### Installing pre-requisite packages
+
+<Tabs syncKey="OS">
+  <TabItem label="Red Hat/CentOS">
+```tsx
+sudo dnf -y install jq bc
+```
+</TabItem>
+<TabItem label="Ubuntu/Debian">
+```tsx
+sudo apt-get -y update
+sudo apt-get -y install jq bc
+```
+</TabItem>
+</Tabs>
+
+Download the Performance Test Pack from IBM Passport Advantage:
+
+![CleanShot 2024-07-16 at 10 42 01](https://media.github.ibm.com/user/20330/files/fb3317f2-0ac4-4ae8-aa58-e9259ffaddc5)
+
+The file downloaded will likely be named `IQSR_1.0_Linux_EN.zip`. Extract the file.
+
+```zsh
+unzip ~/Downloads/IQSR_1.0_Linux_EN.zip
+Archive:  /Users/kramerro/Downloads/IQSR_1.0_Linux_EN.zip
+  inflating: M0J91EN/pqc-performance-test_1.0.0.tar
+```
+
+Upload the resultant `pqc-performance-test_1.0.0.tar` to your docker host.
+
+On your docker host
+
+```tsx
+mkdir -p ~/perftest
+tar -xf pqc-performance-test_1.0.0.tar -C ~/perftest/
+
+```
+
+Change over to the newly extracted directory
+
+```tsx
+cd ~/perftest/pqc-performance-test/test_utils/build_images/
+```
+
+## Install the Performance Test Harness
+
+:::note[IBM Docs]
+
+A lot of this stuff is take verbatim from here:
+
+https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=harness-installing-performance-test
+
+:::
+
+### Building the images
+
+Execute the `build_images.sh` script and select `1` when prompted for the License Agreement.
+
+Should show the images available now for Docker
+```tsx {6-8}
+docker images
+
+REPOSITORY                                          TAG          IMAGE ID       CREATED         SIZE
+adaptive-proxy                                      ubi-9.3      99c3cd5ad80f   2 months ago    277MB
+adaptive-proxy                                      qscopenssl   6609ea524cdf   2 months ago    282MB
+localhost:5000/qsc-h2load-provider-22.04.2-1.1.1t   1.0          5a856162a800   8 months ago    427MB
+localhost:5000/qsc-curl-provider-9.2.0-1.1.1t       1.0          429552679bba   8 months ago    70.3MB
+localhost:5000/qsc-openssl-provider-9.2.0-1.1.1t    1.0          8b69ff2c49da   8 months ago    77MB
+```
+
+### Configuring the build images
+
+Execute the `build_config.sh` script. We are going to use our test vm that is running our test site for the adaptive proxy.
+Since this is running on IBM Fyre, we have two IP addresses available. We're going to point to both.
+```tsx
+./build_config.sh
+
+Enter the target FQDN list seperated by space (TARGET_FQDN_LIST): 9.46.99.87 10.21.34.204
+Enter the target IP list seperated by space (TARGET_IP_LIST): 9.46.99.87 10.21.34.204
+Enter the test FQDN (TESTFQDN): apache-host01.fyre.ibm.com
+```
+
+The build will take a while.
+
+After awhile you should see
+
+```tsx
+Performance test server build completed successfully.
+Launching performance test server ...
+Launching localhost:5000/qsc-perf-server-ubuntu:provider.
+Performance test server continer started RC=0, container id 318e77d157114d84915654f86cc8c3a225c689e9983bb9d38fbc6b5cbdefc22d.
+Building PQC client container ...
+Building PQC client container ...
+```
+

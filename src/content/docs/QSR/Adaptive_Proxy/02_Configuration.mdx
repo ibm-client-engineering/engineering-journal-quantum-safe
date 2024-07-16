@@ -130,6 +130,11 @@ After following the instructions to install the Adaptive Proxy [here](../01_inst
 
 Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.conf`
 
+:::note[On NGINX configuration]
+
+There's likely better ways to configure this, but for this example, this works fine.
+:::
+
 ```tsx
 # IBM Confidential
 # PID: 5900-B8I
@@ -139,12 +144,14 @@ Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.con
 # Location directive documentation: https://nginx.org/en/docs/http/ngx_http_core_module.html#location
 # file path in server: /etc/nginx/conf.d/location.conf
 
-
-location / {
-    proxy_pass http://apache-host01.fyre.ibm.com:8080;
+location ^~ / {
+    proxy_pass http://apache-host01.fyre.ibm.com:8080/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
+
 ```
 
 Start up the adaptive proxy
@@ -162,8 +169,8 @@ Proxy should come up and our test site should be available now
 
 In our case, we're pointing the proxy_pass to the FQDN virtual host we configured on our web server.
 
-
 :::note[How it works]
+
 The magic is the PORT. You must go to the URL at port 8443 which is where the proxy listens.
 
 In our case, to get to the proxied site:
@@ -175,6 +182,30 @@ dockerbot21 is our docker host in fyre. His FQDN is `dockerbot21.fyre.ibm.com`
 Our apache host is `apache-host01.fyre.ibm.com`
 
 :::
+
+### Verifying the encryption algorithms
+
+Now that our site is up and proxied, let's verify that it's using a Quantum Safe algorithm for encryption.
+
+:::warning
+Currently there is no PQC encryption available for any TLS certs available from any legitimate Certificate Authority.
+:::
+
+In a Chrome brower, go to the site and click the three dots.
+
+![CleanShot 2024-07-16 at 15 13 25](https://media.github.ibm.com/user/20330/files/7274c9cc-fcff-45f7-84d0-05600133ce96)
+
+Open the Developer Tools
+
+![CleanShot 2024-07-16 at 15 21 34](https://media.github.ibm.com/user/20330/files/ef94bf4c-fa38-4493-bb3e-2836b55da780)
+
+Click the `Security` panel
+
+![CleanShot 2024-07-16 at 15 25 04](https://media.github.ibm.com/user/20330/files/c0a3866b-1537-483e-bf50-ec1ef26679f1)
+
+Here we can see that `X25519Kyber768Draft00` is one of the encryption algorithms and that's Quantum Safe.
+
+## Diagram of the Proxied Site
 
 ```d2 sketch pad=50
 direction: left
