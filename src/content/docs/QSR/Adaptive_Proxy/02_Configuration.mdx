@@ -130,6 +130,13 @@ After following the instructions to install the Adaptive Proxy [here](../01_inst
 
 Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.conf`
 
+:::note[On NGINX configuration]
+
+We are adding three location blocks for the three directory paths here. And we're reserving the `/app/` path for the root page of the proxied site. This does break things somewhat, but by doing this we are leaving `/` open for the adaptive proxy landing page.
+
+There's likely better ways to configure this, but for this example, this works fine.
+:::
+
 ```tsx
 # IBM Confidential
 # PID: 5900-B8I
@@ -139,12 +146,30 @@ Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.con
 # Location directive documentation: https://nginx.org/en/docs/http/ngx_http_core_module.html#location
 # file path in server: /etc/nginx/conf.d/location.conf
 
-
-location / {
-    proxy_pass http://apache-host01.fyre.ibm.com:8080;
+location ^~ /app/ {
+    proxy_pass http://apache-host01.fyre.ibm.com:8080/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
+
+location ^~ /guides/example/ {
+    proxy_pass http://apache-host01.fyre.ibm.com:8080/guides/example/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location ^~ /reference/example/ {
+    proxy_pass http://apache-host01.fyre.ibm.com:8080/reference/example/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
 ```
 
 Start up the adaptive proxy
@@ -161,6 +186,10 @@ Proxy should come up and our test site should be available now
 
 
 In our case, we're pointing the proxy_pass to the FQDN virtual host we configured on our web server.
+
+We can also verify that the Adaptive Proxy landing page is also available:
+
+![CleanShot 2024-07-16 at 13 36 23@2x](https://media.github.ibm.com/user/20330/files/e4c5c254-3283-4977-90b4-9cfa797d22e0)
 
 
 :::note[How it works]
