@@ -89,8 +89,28 @@ localhost:5000/qsc-curl-provider-9.2.0-1.1.1t       1.0          429552679bba   
 localhost:5000/qsc-openssl-provider-9.2.0-1.1.1t    1.0          8b69ff2c49da   8 months ago    77MB
 ```
 
-### Cp
+### Configuring the build images
 
+Execute the `build_config.sh` script. We are going to use our test vm that is running our test site for the adaptive proxy.
+Since this is running on IBM Fyre, we have two IP addresses available. We're going to point to both.
+```tsx
+./build_config.sh
 
+Enter the target FQDN list seperated by space (TARGET_FQDN_LIST): 9.46.99.87 10.21.34.204
+Enter the target IP list seperated by space (TARGET_IP_LIST): 9.46.99.87 10.21.34.204
+Enter the test FQDN (TESTFQDN): apache-host01.fyre.ibm.com
+```
 
+The build will take a while.
+
+After awhile you should see
+
+```tsx
+Performance test server build completed successfully.
+Launching performance test server ...
+Launching localhost:5000/qsc-perf-server-ubuntu:provider.
+Performance test server continer started RC=0, container id 318e77d157114d84915654f86cc8c3a225c689e9983bb9d38fbc6b5cbdefc22d.
+Building PQC client container ...
+Building PQC client container ...
+```
 
