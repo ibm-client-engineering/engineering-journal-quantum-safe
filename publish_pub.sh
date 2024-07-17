@@ -9,7 +9,7 @@ GITHUB_REPOSITORY=$2
 # BASE_DOMAIN = github.io
 #GITHUB_SERVER_URL="https://github.com"
 GITHUB_SERVER_URL=$(echo "$GITHUB_SERVER_URL" | sed -s "s/https:\/\///")
-GITHUB_REPOSITORY="ibm-client-engineering/engineering-journal-quantum-safe"
+#GITHUB_REPOSITORY="ibm-client-engineering/engineering-journal-quantum-safe"
 IFS=/ read -r -d '' ORG REPO < <(printf %s "$GITHUB_REPOSITORY")
 
 document="astro.config.mjs"
