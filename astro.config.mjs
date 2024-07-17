@@ -1,6 +1,6 @@
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import rehypeMermaid from 'rehype-mermaid';
 
 import d2 from "astro-d2";
@@ -10,6 +10,9 @@ export default defineConfig({
   outDir: './build',
   site: 'https://pages.github.ibm.com/',
   base: '/ibm-client-engineering/engineering-journal-quantum-safe/',
+  image: {
+    service: passthroughImageService(),
+  },
   build: {
     assets: 'css'
   },
