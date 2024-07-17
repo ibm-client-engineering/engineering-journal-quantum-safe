@@ -35,7 +35,7 @@ jobs:
           yarn upgrade
       - name: Update our astro config
         run: |
-          sh publish_pub.sh ${{ github.server_url }} ${{ github.repository }}
+          bash publish_pub.sh ${{ github.server_url }} ${{ github.repository }}
       - name: Install, build, and upload your site output
         id: build
         run: yarn build
