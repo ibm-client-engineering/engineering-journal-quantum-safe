@@ -13,7 +13,10 @@ GITHUB_SERVER_URL=$(echo "$GITHUB_SERVER_URL" | sed -s "s/https:\/\///")
 IFS=/ read -r -d '' ORG REPO < <(printf %s "$GITHUB_REPOSITORY")
 
 document="astro.config.mjs"
+index="src/content/docs/index.mdx"
 
 sed -i "s/\bsite:.*/site: \'https:\/\/$ORG.github.io\',/" $document
 sed -i "s/\bbase:.*/base: \'$REPO\',/" $document
 sed -i "s/\bgithub:.*/github: \'https:\/\/$GITHUB_SERVER_URL\/$ORG\/$REPO\',/" $document
+
+sed -i "s/\blink: \/$ORG\/$REPO\/overview/link: \/$REPO\/overview/" $index
