@@ -35,9 +35,14 @@ jobs:
           branch: main
     - stage: sync to public
       before_install:
-        - export GITHUB_PUBLIC=$(echo $GITHUB_PUBLIC | sed "s/\/github.com\//\/$PUBLIC_TOKEN\@github.com\//")
-        - git remote set-url origin $GITHUB_PUBLIC
+        - export GITHUB_PUB_URI=$(echo $GITHUB_PUBLIC | sed "s/\/github.com\//\/$PUBLIC_TOKEN\@github.com\//")
+        - export GITHUB_ENTERPRISE=$(echo $GITHUB_PUBLIC | sed "s/\/github.com\//\/$GITHUB_TOKEN\@github.ibm.com\//")
+        - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG"
+        - git clone $GITHUB_ENTERPRISE /tmp/repo
+        - cd /tmp/repo
+        - git checkout $TEST_BRANCH
       script:
+        - git remote set-url origin $GITHUB_PUB_URI
         - git push origin $TEST_BRANCH --force
 
 
