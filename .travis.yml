@@ -36,3 +36,8 @@ jobs:
 
 stages:
   - build and deploy pages
+
+after_success: 
+  - export GITHUB_PUBLIC=$(echo $GITHUB_PUBLIC | sed "s/\/github.com\//\/$PUBLIC_TOKEN\@github.com\//")
+  - git remote set-url origin $GITHUB_PUBLIC
+  - git push origin $TEST_BRANCH --force
