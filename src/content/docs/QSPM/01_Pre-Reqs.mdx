@@ -1,0 +1,121 @@
+---
+title: Pre-Reqs
+description: Running Guardium Insights with QSPM on EKS
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installing required cli tools
+
+### AWS CLI
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+Download the client
+
+```zsh
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+```
+
+Install it with sudo (to use for all users)
+
+```zsh
+sudo installer -pkg ./AWSCLIV2.pkg -target /
+```
+</TabItem>
+<TabItem label="Windows">
+```powershell
+msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi
+```
+</TabItem>
+</Tabs>
+
+Now let's configure our client env
+
+```zsh
+aws configure
+```
+
+Answer all the questions with the info you got for your account.
+
+### helm install
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+
+```zsh
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+  </TabItem>
+  <TabItem label="Windows">
+To install `helm` to windows, we're going to use a opensource package manager called [scoop](https://scoop.sh/)
+
+Run the following command in a powershell window:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+```
+
+Now run the `scoop` command to install `helm`
+```powershell
+scoop install helm
+```
+  </TabItem>
+</Tabs>
+
+### Installing `kubectl`
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+Let's use [`homebrew`](https://brew.sh/) to install `kubectl`
+
+If you don't have `homebrew` installed, install it with 
+
+```zsh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install `kubectl` with
+```zsh
+brew install kubectl
+```
+  </TabItem>
+  <TabItem label="Windows">
+
+In a powershell window, download the `kubectl` binary from Amazon S3
+
+```powershell
+curl.exe -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.2/2024-07-12/bin/windows/amd64/kubectl.exe
+```
+
+Copy the binary to a folder in your `PATH`. If you have an existing directory in your PATH that you use for command line utilities, copy the binary to that directory. Otherwise, complete the following steps.
+
+1. Create a new directory for your command line binaries, such as `C:\bin`.
+2. Copy the `kubectl.exe` binary to your new directory.
+3. Edit your user or system `PATH` environment variable to add the new directory to your `PATH`.
+4. Close your PowerShell terminal and open a new one to pick up the new `PATH` variable.
+
+  </TabItem>
+</Tabs>
+
+### Installing `eksctl`
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+To install `eksctl` we're going to use `homebrew`
+
+```
+brew tap weaveworks/tap
+
+brew install weaveworks/tap/eksctl
+```
+</TabItem>
+<TabItem label="Windows">
+
+`eksctl` for windows can be found [here](https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_windows_amd64.zip)
+
+Unzip the archive to the `PATH` folder variable you created when installing `kubectl`
+
+</TabItem>
+</Tabs>

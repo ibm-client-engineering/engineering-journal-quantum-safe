@@ -43,7 +43,12 @@ export default defineConfig({
       autogenerate: {
         directory: 'QSE'
       }
-    }, {
+    },{
+      label: 'QSPM',
+      autogenerate: {
+        directory: 'QSPM'
+      }
+    },{
       label: 'Reference',
       autogenerate: {
         directory: 'reference'
