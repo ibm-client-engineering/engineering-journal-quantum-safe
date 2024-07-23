@@ -1,0 +1,348 @@
+---
+title: Pre-Reqs
+description: Running Guardium Insights with QSPM on EKS
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installing required cli tools
+
+### Windows Exec Path
+If your environment is Windows, let's set a path for some of these executables to run from:
+
+Right click on the Windows badge at the lower left hand slide and select `System`
+
+![WindowsPath01](../../../assets/images/WindowsPath01.png)
+
+Scroll down and select `Advanced system settings`
+
+![WindowsPath02](../../../assets/images/WindowsPath02.png)
+
+Select `Environment Variables`
+
+![WindowsPath03](../../../assets/images/WindowsPath03.png)
+
+Under the env variables, select Path under `System variables` and hit `Edit`
+
+![WindowsPath04](../../../assets/images/WindowsPath04a.png)
+
+Click `New` and let's create a new directory under `C:` called `Bin`
+
+![WindowsPath06](../../../assets/images/WindowsPath06.png)
+
+Once that is saved, create the new directory under `C:`
+
+![WindowsPath07](../../../assets/images/WindowsPath07.png)
+
+`C:\Bin` is where we will drop some of our executables.
+
+### Package managers
+
+<Tabs syncKey="OS">
+<TabItem label="MacOS">
+
+**[Homebrew for MacOS](https://brew.sh/)**
+
+Install `homebrew` with the following command
+
+```zsh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+**[Scoop for Windows](https://scoop.sh/)**
+
+This installs the `scoop` package manager. This just makes it easier to install some of the pre-reqs in Windows.
+
+Run the following commands in a powershell window one line at a time:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+```
+</TabItem>
+</Tabs>
+
+### Installing AWS CLI
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+Download the client
+
+```zsh
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+```
+
+Install it with sudo (to use for all users)
+
+```zsh
+sudo installer -pkg ./AWSCLIV2.pkg -target /
+```
+</TabItem>
+<TabItem label="Windows">
+```powershell
+msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi
+```
+</TabItem>
+</Tabs>
+
+Now let's configure our client env
+
+```zsh
+aws configure
+```
+
+Answer all the questions with the info you got for your account.
+
+### Installing helm
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+
+```zsh
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+  </TabItem>
+  <TabItem label="Windows">
+To install `helm` to windows with `scoop`
+
+```powershell
+scoop install helm
+```
+  </TabItem>
+</Tabs>
+
+### Installing `kubectl`
+
+<Tabs syncKey="OS">
+  <TabItem label="MacOS">
+
+
+Then install `kubectl` with
+```zsh
+brew install kubectl
+```
+  </TabItem>
+  <TabItem label="Windows">
+
+In a powershell window, download the `kubectl` binary from Amazon S3
+
+```powershell
+curl.exe -OL https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.2/2024-07-12/bin/windows/amd64/kubectl.exe
+```
+Copy the binary to `C:\Bin`
+
+  </TabItem>
+</Tabs>
+
+### Installing `eksctl`
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+To install `eksctl` we're going to use `homebrew`
+
+```
+brew tap weaveworks/tap
+
+brew install weaveworks/tap/eksctl
+```
+</TabItem>
+<TabItem label="Windows">
+
+In a powershell window:
+
+{/*
+```powershell
+curl.exe -OL https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_windows_amd64.zip
+Expand-Archive -LiteralPath 'C:\Users\Administrator\eksctl_windows_amd64.zip' -DestinationPath 'C:\Bin'
+```
+*/}
+
+```powershell
+scoop install eksctl
+```
+
+Verify the installation
+```powershell
+eksctl info
+
+eksctl version: 0.187.0
+kubectl version: v1.30.2-eks-1552ad0
+OS: windows
+```
+
+
+</TabItem>
+</Tabs>
+
+### Installing Openshift CLI
+
+:::note
+the `oc` cli is required to work with the IBM Cloud Pak plugin. This plugin is needed for part of the GI installation.
+
+It also needs to be `4.10.x`
+
+We are installing `4.10.67`
+
+:::
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+
+If `/usr/local/bin` doesn't exist, create the directory path.
+
+```zsh
+sudo mkdir -p /usr/local/bin
+```
+Then download the `oc` tar gzip and install.
+
+```zsh
+curl -fsSL -o openshift-client-mac.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.10.67/openshift-client-mac.tar.gz
+sudo tar -C /usr/local/bin -zxf openshift-client-mac.tar.gz oc
+```
+
+This should install client version `4.10.67` to `/usr/local/bin`. 
+
+Verify this with:
+```zsh
+oc version --client
+Client Version: 4.10.67
+```
+</TabItem>
+<TabItem label="Windows">
+In a powershell window, download the `openshift-cli` tar gz.
+
+```powershell
+curl.exe -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.10.67/openshift-client-windows.zip
+```
+
+Extract the zip file
+```powershell
+Expand-Archive -LiteralPath 'C:\Users\Administrator\openshift-client-windows.zip' -DestinationPath 'C:\Bin'
+```
+Verify it works
+
+```powershell
+oc version --client
+
+Client Version: 4.10.67
+```
+Verify the installation in a powershell window
+
+</TabItem>
+</Tabs>
+
+### Installing oc-ibm_pak
+
+`oc-ibm_pak` is a plugin for the `oc` cli for managing cloud-paks. 
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+Download the plugin with `curl`. At this writing, version `1.15.1` is the most recent.
+
+
+```zsh
+curl -L https://github.com/IBM/ibm-pak/releases/download/v1.15.1/oc-ibm_pak-darwin-amd64.tar.gz -o oc-ibm_pak-darwin-amd64.tar.gz
+
+```
+Extract and copy the plugin to `/usr/local/bin`
+
+```zsh
+tar -xvf oc-ibm_pak-darwin-amd64.tar.gz
+cp oc-ibm_pak-darwin-amd64 /usr/local/bin/oc-ibm_pak
+```
+
+Verify the installation
+```zsh
+oc ibm-pak --help
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+In a powershell window, download the plugin with `curl.exe`. At this writing, version `1.15.1` is the most recent.
+
+```powershell
+curl.exe -OL https://github.com/IBM/ibm-pak/releases/download/v1.15.1/oc-ibm_pak-windows-amd64.tar.gz -o oc-ibm_pak-windows-amd64.tar.gz
+```
+
+Extract the plugin
+```powershell
+tar -xvf oc-ibm_pak-windows-amd64.tar.gz
+```
+
+Copy the plugin to our exec path
+```powershell
+Copy-Item oc-ibm_pak-windows-amd64 C:\Bin\oc-ibm_pak.exe
+```
+
+Verify the installation
+```powershell
+oc ibm-pak --help
+```
+
+</TabItem>
+</Tabs>
+
+### Install IBM Case CLI
+
+{/*This seems to only be available internally https://github.ibm.com/CloudPakOpenContent/case-spec-cli/releases/tag/v2.7.2 */}
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+
+Download the latest release of the Case CLI
+```zsh
+TBD
+```
+Extract it and move it to `/usr/local/bin`
+
+```zsh
+TBD
+```
+
+Verify that it's available
+```zsh
+```
+</TabItem>
+<TabItem label="Windows">
+
+**TBD**
+
+</TabItem>
+</Tabs>
+
+### Installing the Operator-SDK
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+
+Install the `operator-sdk` with homebrew
+```zsh
+brew install operator-sdk
+```
+
+Verify the installation
+```zsh
+operator-sdk version
+
+operator-sdk version: "v1.35.0", commit: "e95abdbd5ccb7ca0fd586e0c6f578e491b0a025b", kubernetes version: "v1.28.0", go version: "go1.21.11", GOOS: "darwin", GOARCH: "arm64"
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+Windows installation for the operator-sdk is a little more complicated...
+
+Install golang
+```powershell
+scoop install go
+```
+
+{/* Still in progress */}
+
+</TabItem>
+</Tabs>
+
