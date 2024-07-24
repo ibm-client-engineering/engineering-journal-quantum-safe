@@ -3,6 +3,8 @@ title: Scanning
 description: QSE Usage
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 ## Scanning in VSCode
 
 :::note[Useful Links]
@@ -51,3 +53,205 @@ When the scan completes, you should see the following directories show up in the
 We should now see the QUANTUM SAFE EXPLORER DASHBOARD populated with some graphs and charts.
 
 ![Scanning7](../../../assets/images/scanning7.png)
+
+## Executing the IBM Quantum Safe Explorer CLI
+
+
+<Tabs syncKey="OS">
+<TabItem label="Windows">
+
+
+</TabItem>
+<TabItem label="MacOS">
+
+
+Change directory to `M0GT6EN` where ever you had it extracted and run the following command:
+
+
+```zsh
+/usr/bin/sed -i "" 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance.config
+```
+
+To make sure you have the correct permissions to run the shell script first run:
+
+```zsh
+chmod +x cli.sh
+```
+
+Next, run the following **help** command 
+
+```zsh
+./cli.sh -h 
+```
+
+> **Note:**
+> 
+> The run will also point out that you have already accepted the licensing agreement.
+
+Before you officially perform the script run, it is helpful to know the list of required parameters:
+
+![QSEmacos1](../../../assets/images/macos-qse-cli-required-params.png)
+
+As well as the optional parameters:
+
+![QSEmacos2](../../../assets/images/macos-qse-cli-optional-params.png)
+
+You initiate a scan using the required **program package path**. The command can be run for single or multiple languages. Here is an example:
+
+`/cli.sh -i <package-path> -clean -nmo -ccdir resource:class-catalog -l .java`
+
+> **Note:**
+> 
+> If you are scanning more than one language, then the command needs to be run in double quotation marks. Use the **Help** command by running `./cli.sh -h` for more details on the various parameters.
+
+Here is an example of a completed scan with a specified program *package path*:
+
+```bash
+$ ./cli.sh -i ~/Virtualenvs/java-projects -clean -nmo -ccdir resource:class-catalog -l .java
+License Agreement have been already completed.
+canonical pathname >> /Users/gerald.trotmanibm.com/Virtualenvs/java-projects
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+build_class_catalog  : 
+class-catalogs_directory : resource:class-catalog
+clear_results        : 
+dart_class_catalog   : ../quantum-safe-sca-tng/class-catalog/dart-class-catalog.json
+data_analytics       : false
+data_mine_class_catalog : 
+enable_detail_log    : 
+exact_match          : true
+input_folder         : /Users/gerald.trotmanibm.com/Virtualenvs/java-projects
+internal_utility     : 
+java_class_catalog   : ../quantum-safe-sca-tng/class-catalog/java-class-catalog.json
+language_list        : .java
+library_usage        : 
+name_matching_only   : 
+output_folder        : /Users/gerald.trotmanibm.com/Virtualenvs/java-projects/qs_scan_result
+path_exclusion_filter : 
+path_filter          : 
+python_class_catalog : ../quantum-safe-sca-tng/class-catalog/python-class-catalog.json
+regression_test      : 
+single_steps         : multi-language-selection
+source_filter        : 
+tab_size             : 4
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Version 1.23.0.1065 -- Generated On Tue Jul 23 13:22:12 PDT 2024
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                PARAMETERS SENT TO SCA AND ANALYTICS
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ error-log-file                          : qs_scan_result/log/multi-language-err.log
++ parameter-class-catalogs-directory      : resource:class-catalog
++ parameter-demo-mode                     : true
++ parameter-detail-results                : true
++ parameter-language-processing-list      : .java
++ parameter-library-selection             : pycrypto
++ parameter-path-exclusion-filter         : 
++ parameter-path-filter                   : 
++ parameter-run-single-step               : delete-project-root,crypto-name-matching-only,multi-language-selection
++ parameter-source-filter                 : 
++ parameter-source-filter-exact-match     : true
++ parameter-tab-size                      : 4
++ parameter-use-absolute-source-paths     : true
++ project-root                            : qs_scan_result
++ root                                    : /Users/gerald.trotmanibm.com/Virtualenvs/java-projects
++ run-log-file                            : qs_scan_result/log/multi-language.log
++ source-dart-class-catalog-json          : ../quantum-safe-sca-tng/class-catalog/dart-class-catalog.json
++ source-java-class-catalog-json          : ../quantum-safe-sca-tng/class-catalog/java-class-catalog.json
++ source-knowledge-base-db                : kb/cd_kb.db
++ source-python-class-catalog-json        : ../quantum-safe-sca-tng/class-catalog/python-class-catalog.json
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[23/07/2024 13:22:12.119] Setting Log File To           : /Users/gerald.trotmanibm.com/Virtualenvs/java-projects/qs_scan_result/log/multi-language.log
+[23/07/2024 13:22:12.121] Setting Error File To         : /Users/gerald.trotmanibm.com/Virtualenvs/java-projects/qs_scan_result/log/multi-language-err.log
+[23/07/2024 13:22:12.125] Running Task                  : com.ibm.quantumsafe.sca.lang.base.task.impl.LoadCryptoKBImpl
+[23/07/2024 13:22:12.544] Running Task                  : com.ibm.quantumsafe.sca.lang.general.task.impl.DeleteProjectRootDirectoryImpl
+[23/07/2024 13:22:12.573] Running Task                  : com.ibm.quantumsafe.sca.lang.general.task.impl.ClearScanResultsImpl
+[23/07/2024 13:22:12.611] Running Task                  : com.ibm.quantumsafe.sca.lang.java.task.impl.JavaPreprocessImpl
+[23/07/2024 13:22:12.639] Running Task                  : com.ibm.quantumsafe.sca.lang.java.task.impl.JavaTokenizeImpl
+[23/07/2024 13:22:12.671] Running Task                  : com.ibm.quantumsafe.sca.reporting.task.impl.AddLineNumbersImpl
+[23/07/2024 13:22:12.695] Running Task                  : com.ibm.quantumsafe.sca.lang.java.task.impl.JavaStructureImpl
+[23/07/2024 13:22:12.732] Running Task                  : com.ibm.quantumsafe.sca.framework.common.BuildLocalClassCatalogImpl
+[23/07/2024 13:22:13.191] Class Catalog Size            : 11010
+[23/07/2024 13:22:15.175] Running Task                  : com.ibm.quantumsafe.sca.lang.java.task.impl.ExternalizeNestedCallsmpl
+[23/07/2024 13:22:15.198] Running Task                  : com.ibm.quantumsafe.sca.framework.common.JavaBuildGraphModelImpl
+[23/07/2024 13:22:15.234] Running Task                  : com.ibm.quantumsafe.sca.reporting.task.impl.BuildRcgSummaryAndCBOMFromModelImpl
+[23/07/2024 13:22:15.253] Running Task                  : com.ibm.quantumsafe.sca.framework.common.AnalyzeClasssCatalogImpl
+[23/07/2024 13:22:15.739] Running Task                  : com.ibm.quantumsafe.sca.reporting.task.impl.BuildDashboardFromFindings
+[23/07/2024 13:22:15.745] Running Task                  : com.ibm.quantumsafe.sca.lang.general.task.impl.SendScanResultsImpl
+[23/07/2024 13:22:15.756] Running Task                  : com.ibm.quantumsafe.sca.framework.common.impl.ProfileProcessImpl
+```
+
+> **Note:**
+> When scanning large applications (e.g., more than 500,000 lines of code) on macOS systems, IBM Quantum Safe Explorer consumes a large amount of disk space. It is advised to archive and clear the results folder and to reboot the machine before initiating a scan on another application. 
+> 
+>
+
+</TabItem>
+</Tabs>
+
+
+## Accessing the IBM Quantum Safe Explorer CLI scan results
+
+
+<Tabs syncKey="OS">
+<TabItem label="Windows">
+
+
+</TabItem>
+<TabItem label="MacOS">
+
+
+The results of your scan are written to a `findings.json` file and can be found nested within your project path. It resemble the following:
+
+`/<package-path>/qs_scan_result/scan-results/`
+
+The file is quite verbose. Here's a snippet of the result:
+
+![Accessing1](../../../assets/images/scan-results-json.png)
+
+</TabItem>
+</Tabs>
+
+
+## Viewing the CLI scan results in the IBM Quantum Safe Explorer Visual Studio Code Extension
+
+<Tabs syncKey="OS">
+<TabItem label="Windows">
+
+
+</TabItem>
+<TabItem label="MacOS">
+
+### Opening the scanned folder
+
+As of IBM Quantum Safe Explorer 1.0.1 release, you can now view the CLI scan results in Visual Studio Code.
+
+When you execute a scan, a **qs_explorer_result** folder is generated along with the **qs_scan_result** folder.
+
+![Opening1](../../../assets/images/scan-results-directory.png)
+
+> **Note:**
+> To view the results, you need to have the Visual Studio Code extension installed on your system. 
+> 
+>
+
+Navigate to the **File** menu drop down, select the **Open Folder** to locate your `/<package-path>` folder:
+
+![Opening2](../../../assets/images/vs-code-find-project.png)
+
+Once you have found your `/<package-path>` simply open it to populate the project in the Visual Studio Code Explorer view:
+
+![Opening3](../../../assets/images/vs-code-open-project.png)
+
+To populate the **SCAN RESULTS**, we must first navigate to the **QUANTUM SAFE EXPLORER** tab. This then populates the **SCAN RESULTS** menu. That menu drop down then brings you to the `Crypto Artifacts`. For example:
+
+![Opening4](../../../assets/images/vs-code-quantum-safe-explorer.png)
+
+To view the results dashboard, you simply toggle to the **QUANTUM SAFE EXPLORER DASHBOARD** tab and click the **+** symbol on the right hand side to expand the view:
+
+![Opening5](../../../assets/images/vs-code-quantum-safe-dashboard-tab.png)
+
+This should then expose the dashboard as shown below:
+
+![Opening6](../../../assets/images/vs-code-quantum-safe-dashboard-view.png)
+
+</TabItem>
+</Tabs>

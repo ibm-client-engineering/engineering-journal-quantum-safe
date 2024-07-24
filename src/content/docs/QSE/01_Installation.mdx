@@ -311,16 +311,31 @@ Do not close this window as apparently it DOES NOT continue running in the backg
 </TabItem>
 </Tabs>
 
-## Installing the CLI
 
-Change directory to `M0GT6EN` where ever you had it extracted and run the following command:
+## Installing the IBM Quantum Safe Explorer CLI
 
-### MacOS
-```zsh
-/usr/bin/sed -i "" 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance.config
+<Tabs syncKey="OS">
+<TabItem label="Windows">
+
+Simply change directory to where ever you extracted the extension. The `cli.sh` file will be used to perform the actual scan. Assuming you unzipped from your `\Downloads` directory:
+
+```powershell
+PS C:\Users\Administrator\Downloads\IIQSE0_1.0.1_MP_EN> cd .\M0GT6EN\
 ```
 
-The cli is really just a shell script that runs relative to where you extracted the file.
+</TabItem>
+<TabItem label="MacOS">
+
+Simply change directory to wherever you extracted the extension. The `cli.sh` file will be used to perform the actual scan. Assuming you unzipped from your `~/Downloads` directory:
+
+```zsh
+cd ~/Downloads/M0GT6EN
+```
+</TabItem>
+</Tabs>
+
+
+
 
 ## Installing VSCode plugin
 
