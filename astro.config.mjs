@@ -28,32 +28,53 @@ export default defineConfig({
       github: 'https://github.ibm.com/ibm-client-engineering/engineering-journal-quantum-safe'
     },
     // Populate sidebar directories here
-    sidebar: [{
-      label: 'Forward',
-      autogenerate: {
-        directory: 'how-we-work'
+    sidebar: [
+      {
+        label: 'Forward',
+        autogenerate: {
+          directory: 'how-we-work'
+        }
+      },{
+        label: 'QSR',
+        items: [
+          {
+            label: 'Adaptive Proxy',
+            autogenerate: {
+              directory: 'QSR/Adaptive_Proxy'
+            }
+          },{
+            label: 'Performance Test Harness',
+            autogenerate: {
+              directory: 'QSR/Performance_Test_Harness'
+            }
+          }
+        ],
+      },{
+        label: 'QSE',
+        autogenerate: {
+          directory: 'QSE'
+        }
+      },{
+        label: 'QSPM',
+        autogenerate: {
+          directory: 'QSPM'
+        }
+      },{
+        label: 'Reference',
+        items: [
+          {
+            label: 'QSR',
+            badge: 'IBM',
+            link: 'https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x',
+          },
+          {
+            label: 'QSE',
+            badge: 'IBM',
+            link: 'https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x',
+          }
+        ]
       }
-    },{
-      label: 'QSR',
-      autogenerate: {
-        directory: 'QSR'
-      }
-    },{
-      label: 'QSE',
-      autogenerate: {
-        directory: 'QSE'
-      }
-    },{
-      label: 'QSPM',
-      autogenerate: {
-        directory: 'QSPM'
-      }
-    },{
-      label: 'Reference',
-      autogenerate: {
-        directory: 'reference'
-      }
-    }]
+    ]
   }), tailwind({
     // Disable the default base styles:
     applyBaseStyles: false
