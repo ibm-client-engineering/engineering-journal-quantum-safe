@@ -11,16 +11,15 @@ hero:
       link: /ibm-client-engineering/engineering-journal-quantum-safe/overview
       icon: right-arrow
       variant: primary
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+{/*import { Card, CardGrid } from '@astrojs/starlight/components';*/}
+import { Card, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
 
 ## Next steps
 
-<CardGrid stagger>
+{/*<CardGrid stagger>
 	<Card title="Update content" icon="pencil">
 		Edit `src/content/docs/index.mdx` to see this page change.
 	</Card>
@@ -33,4 +32,20 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 	<Card title="Read the docs" icon="open-book">
 		Learn more in [the Starlight Docs](https://starlight.astro.build/).
 	</Card>
+</CardGrid>
+*/}
+
+<CardGrid>
+	<LinkCard
+  		title="External links: QSR"
+  		description="IBM reference for QSR"
+  		href="https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x"
+		icon="external"
+	/>
+	<LinkCard
+  		title="External links: QSE"
+  		description="IBM reference for QSE"
+  		href="https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x"
+		icon="external"
+	/>
 </CardGrid>

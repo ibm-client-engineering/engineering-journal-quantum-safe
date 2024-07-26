@@ -1,9 +1,9 @@
 ---
-title: Opportunity Overview
-description: How we can contain and describe this deployment to client's restricted environment
+title: General Overview
+description: How we can contain and describe this deployment to a restricted environment
 ---
 
-## Security posture
+## Security posture assumptions
 
 - POCs are built in a development account in AWS. 
 - OCP is not approved for production environments.
@@ -11,6 +11,9 @@ description: How we can contain and describe this deployment to client's restric
 - Client adheres to role based access for all their environments. 
 
 ## AWS Role perms
+
+
+**Quantum Safe Posture Management** is supported on either Red Hat Openshift or on AWS EKS. 
 
 ### Policies required for installing OCP
 
@@ -364,7 +367,6 @@ These are some components of this solution that are available from IBM Passport 
 
 - QSR
   - Requires docker or podman
-  - Presumably can be deployed to OCP or any kubernetes as it is a container
   - Using the Adaptive Proxy it can act as a dynamic TLS termination point and re-encrypts connections with quantum-safe encryption
 
 - QSE
@@ -378,4 +380,4 @@ These are some components of this solution that are available from IBM Passport 
   - TBD
 
 - QSPM
-  - Current specs require OCP cluster
+  - Current specs require OCP cluster or EKS
