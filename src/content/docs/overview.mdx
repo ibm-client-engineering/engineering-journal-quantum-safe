@@ -15,7 +15,7 @@ description: How we can contain and describe this deployment to a restricted env
 
 **Quantum Safe Posture Management** is supported on either Red Hat Openshift or on AWS EKS. 
 
-### Policies required for installing OCP
+{/* ### Policies required for installing OCP
 
 The following policies are necessary to install
 
@@ -313,7 +313,7 @@ If you are managing your cloud provider credentials with mint mode, the IAM user
 :::note
 For more details on the IAM user requirements, see https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-account.html#installing-aws-account
 :::
-
+*/}
 ## Engineering infrastructure requirements
 
 Per engineering doc:
@@ -331,12 +331,14 @@ Below sizing are the base requirements for a extra small starter deployment.
 |m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS, 200Gb EBS (additional)|
 |**Totals**|7|52|152G| 1653Gb |
 
+{/*
 ## Open Questions
 
 - Pre-Reqs call for 4 vcpu and 8 gig for the infra/bastion node. Can it get by with 2 vcpu? 
 Reasoning: There isn't many options available in AWS that offer 4x8. Mostly 2x1, 2x4, 2x 
 - Worker nodes require an extra 200Gb disk. What is this required for?
 - Can this work with EFS?
+*/}
 
 ## Storage considerations:
 
@@ -345,11 +347,11 @@ client primarily uses EBS and EFS.
 - Network attached (SAN) SSD at 3000 MB/sec IO (required)
 - Adding ODF into the mix would require adding more larger storage nodes
 
-
-
+{/*
 Other considerations:
 
 - ![Rook-Ceph](https://rook.io/docs/rook/latest-release/Getting-Started/storage-architecture/) - Less bloated version of ODF
+*/}
 
 ## Components
 These are some components of this solution that are available from IBM Passport Advantage:
