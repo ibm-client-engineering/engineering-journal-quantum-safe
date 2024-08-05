@@ -56,20 +56,18 @@ We should now see the QUANTUM SAFE EXPLORER DASHBOARD populated with some graphs
 
 ## Executing the IBM Quantum Safe Explorer CLI
 
+:::note[Windows]
 
-<Tabs syncKey="OS">
-<TabItem label="Windows">
+Make sure that Git Bash is installed and use a Git Bash terminal window for the instructions below.
 
-
-</TabItem>
-<TabItem label="MacOS">
+:::
 
 
 Change directory to `M0GT6EN` where ever you had it extracted and run the following command:
 
 
 ```zsh
-/usr/bin/sed -i "" 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance.config
+/usr/bin/sed -i 's/^RSP_LICENSE_ACCEPTED=.*/RSP_LICENSE_ACCEPTED=true/' LicenseAcceptance.config
 ```
 
 To make sure you have the correct permissions to run the shell script first run:
@@ -184,19 +182,8 @@ Version 1.23.0.1065 -- Generated On Tue Jul 23 13:22:12 PDT 2024
 > 
 >
 
-</TabItem>
-</Tabs>
-
 
 ## Accessing the IBM Quantum Safe Explorer CLI scan results
-
-
-<Tabs syncKey="OS">
-<TabItem label="Windows">
-
-
-</TabItem>
-<TabItem label="MacOS">
 
 
 The results of your scan are written to a `findings.json` file and can be found nested within your project path. It resemble the following:
@@ -207,18 +194,9 @@ The file is quite verbose. Here's a snippet of the result:
 
 ![Accessing1](../../../assets/images/scan-results-json.png)
 
-</TabItem>
-</Tabs>
 
 
 ## Viewing the CLI scan results in the IBM Quantum Safe Explorer Visual Studio Code Extension
-
-<Tabs syncKey="OS">
-<TabItem label="Windows">
-
-
-</TabItem>
-<TabItem label="MacOS">
 
 ### Opening the scanned folder
 
@@ -252,6 +230,3 @@ To view the results dashboard, you simply toggle to the **QUANTUM SAFE EXPLORER 
 This should then expose the dashboard as shown below:
 
 ![Opening6](../../../assets/images/vs-code-quantum-safe-dashboard-view.png)
-
-</TabItem>
-</Tabs>
