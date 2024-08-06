@@ -19,7 +19,7 @@ export default defineConfig({
   integrations: [starlight({
     title: 'IBM Quantum Safe',
     logo: {
-      src: './src/assets/ibm-logo-svgrepo-com.svg'
+      src: './src/assets/IBM_logo®_rev_blue50_RGB.png'
     },
     customCss: [
     // Relative path to your custom CSS file
