@@ -26,18 +26,23 @@ Run the `eksctl` command below to create your first cluster and perform the foll
 -   Define a minimum of one node (`--nodes-min 1`) and a maximum of three-node (`--nodes-max 3`) for this node group managed by EKS.
 -   Create a node group with the name `guardium-workers` and select a machine type for the `qspm-workers` node group.
 
+:::caution[Multiple AZ support]
+As of this writing, GI v3.4.0 does not support multiple availability zones. 
+:::
+
 ```tsx
 eksctl create cluster \
---name -east \
+--name gi-east \
 --version 1.30 \
 --region us-east-1 \
---with-oidc \
 --zones us-east-1a,us-east-1b,us-east-1c \
+--with-oidc \
 --nodegroup-name guardium-workers \
---node-type m6i.2xlarge \
+--node-type m6i.4xlarge \
 --nodes 3 \
 --nodes-min 1 \
 --nodes-max 3 \
+--node-zones us-east-1a \
 --tags "Product=Guardium" \
 --managed
 ```
@@ -95,7 +100,7 @@ aws iam create-policy \
 }
 
 ```
-Take note of the `arn` entry for the policy that is returned above as you will need it below.
+Take note of the `arn` entry for the policy that is returned above as you will need it below. From the example output above, our `arn` would be `arn:aws:iam::<ACCOUNT ID>:policy/AmazonEKS_EBS_CSI_Driver_Policy` where `<ACCOUNT ID>` would be our actual AWS account id.
 
 Create the service account
 ```tsx
@@ -108,7 +113,7 @@ eksctl create iamserviceaccount \
   --role-only \
   --role-name AmazonEKS_EBS_CSI_DriverRole
 ```
-Take note of the `arn` entry for the role that is returned above as you will need it below.
+Take note of the `arn` entry for the role that is returned above as you will need it below. In the below example the `arn` returned from above would be `arn:aws:iam::<ACCOUNT ID>:role/AmazonEKS_EBS_CSI_DriverRole`
 
 Create the addon for the cluster
 ```tsx
@@ -174,7 +179,7 @@ Create an IAM role and attach the IAM policy to it. Annotate the Kubernetes serv
 
 ```tsx
 eksctl create iamserviceaccount \
-    --cluster filenet-east \
+    --cluster guardium-east \
     --namespace kube-system \
     --name efs-csi-controller-sa \
     --attach-policy-arn arn:aws:iam::<ACCOUNT ID>:policy/AmazonEKS_EFS_CSI_Driver_Policy \
@@ -188,8 +193,8 @@ Once created, check the iam service account is created running the following com
 eksctl get iamserviceaccount --cluster <cluster-name>
 
 NAMESPACE	NAME				ROLE ARN
-kube-system	aws-load-balancer-controller	arn:aws:iam::748107796891:role/AmazonEKSLoadBalancerControllerRole
-kube-system	efs-csi-controller-sa		arn:aws:iam::748107796891:role/eksctl-filenet-cluster-east-addon-iamserviceaccount-ku-Role1-1SCBRU1DS52QY
+kube-system	aws-load-balancer-controller	arn:aws:iam::<ACCOUNT ID>:role/AmazonEKSLoadBalancerControllerRole
+kube-system	efs-csi-controller-sa		arn:aws:iam::<ACCOUNT ID>:role/eksctl-guardium-east-addon-iamserviceaccount-ku-Role1-1SCBRU1DS52QY
 ```
 
 Now we just need our add-on registry address. This can be found here: https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
@@ -329,9 +334,21 @@ curl -o EFSStorageClass.yaml https://raw.githubusercontent.com/kubernetes-sigs/a
 
 ```
 
-Update it with the storage class id
+:::note[Super Important!]
+Make sure the filesystem id you use in the below command is the filesystem id that was returned to you above!
+
+:::
+
+Update it with the storage class id.
 ```bash
-sed -i 's/fileSystemId:.*/fileSystemId: fs-0f2f504e89fd0033f/' EFSStorageClass.yaml
+sed -i 's/fileSystemId:.*/fileSystemId: <RETURNED FS-ID>/' EFSStorageClass.yaml
+```
+
+If using the default `sed` command that comes with MacOS
+
+```zsh
+
+sed -i "" 's/fileSystemId:.*/fileSystemId: <RETURNED FS-ID>/' EFSStorageClass.yaml
 ```
 
 Deploy the storage class.
@@ -340,12 +357,18 @@ Deploy the storage class.
 kubectl apply -f EFSStorageClass.yaml
 ```
 
+Set EFS as the default storage class
+
+```bash
+kubectl patch storageclass <storage-class-name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
 Finally, verify it's there
 ```tsx
 kubectl get sc
 NAME            PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 efs-sc          efs.csi.aws.com         Delete          Immediate              false                  7s
-gp2 (default)   kubernetes.io/aws-ebs   Delete          WaitForFirstConsumer   false                  13d
+gp2             kubernetes.io/aws-ebs   Delete          WaitForFirstConsumer   false                  13d
 ```
 
 ### Install NGINX Controller

@@ -324,12 +324,16 @@ Per engineering doc:
 
 Below sizing are the base requirements for a extra small starter deployment.
 
-|Flavor | Count | vCPU | RAM | Local Storage |
-|--|--|--|--|--|
-| TBD * | 1 | 4 | 8G | 500GB EBS | 
-|c5.2xlarge|3|24 (8 cores x Count)|48G (16G x Count)| 100Gb EBS|
-|m6i.2xlarge|3|24 (8 cores x Count)|96G (32G x Count)| 250Gb EBS, 200Gb EBS (additional)|
-|**Totals**|7|52|152G| 1653Gb |
+|Flavor | Count | vCPU | RAM | Local Storage | Role |
+|--|--|--|--|--|--|
+|c5.2xlarge|3|24 (8 cores x Count)|48G (16G x Count)| 100Gb EBS| * _Control Plane_ |
+|m6i.4xlarge|3|48 (16 cores x Count)|192G (64G x Count)| 250Gb EBS, 200Gb EBS (additional)| Compute |
+|**Totals**|6|72|240G| 1653Gb | |
+
+:::note[* Control Plane ]
+If deploying to EKS on AWS, you don't need to be concerned with the control plane sizing. Only compute.
+:::
+
 
 {/*
 ## Open Questions
