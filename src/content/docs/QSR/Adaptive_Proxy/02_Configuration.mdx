@@ -172,7 +172,8 @@ Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.con
 
 :::note[On NGINX configuration]
 
-There's likely better ways to configure this, but for this example, this works fine.
+By default, the best encryption Apache supports is TLSv1.2, so be sure to include 
+`proxy_ssl_protocols TLSv1.2` in the config as shown below.
 :::
 
 ```nginx
@@ -186,6 +187,7 @@ There's likely better ways to configure this, but for this example, this works f
 
 location ^~ / {
     proxy_pass https://apache-host01.fyre.ibm.com:8080/;
+    proxy_ssl_protocols TLSv1.2;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
