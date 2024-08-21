@@ -9,6 +9,20 @@ Useful links:
 https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=proxy-configuring-adaptive
 :::
 
+## Browser configuration
+
+For the exercises below, the browser is the client side of the proxied connection. Each browser
+type can be configured to support quantum-safe kyber encryption. Chrome and Edge support kyber
+encryption by default, however Firefox does not.  
+
+Depending on the scenario, it could be desirable to either enable or disable kyber encryption 
+for the browser. For example, if the scenario is a legacy encryption client connecting to a 
+quantum-safe kyber encrypted application or site, then the kyber encryption would need to be 
+disabled on the browser. The vice versa would also be true for a scenario where kyber encrypted
+clients are connecting to a legacy encrypted application or site.
+
+For configuration instructions, see [Enable Post Quantum Cryptography Support in Web Browsers](https://evertrust.io/education/enable-post-quantum-cryptography-support-in-web-browsers/)
+
 ## Adaptive proxy configuration
 
 The adaptive proxy configuration consists of the following files:
