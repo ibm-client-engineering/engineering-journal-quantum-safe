@@ -9,6 +9,20 @@ Useful links:
 https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=proxy-configuring-adaptive
 :::
 
+## Browser configuration
+
+For the exercises below, the browser is the client side of the proxied connection. Each browser
+type can be configured to support quantum-safe kyber encryption. Chrome and Edge support kyber
+encryption by default, however Firefox does not.  
+
+Depending on the scenario, it could be desirable to either enable or disable kyber encryption 
+for the browser. For example, if the scenario is a legacy encryption client connecting to a 
+quantum-safe kyber encrypted application or site, then the kyber encryption would need to be 
+disabled on the browser. The vice versa would also be true for a scenario where kyber encrypted
+clients are connecting to a legacy encrypted application or site.
+
+For configuration instructions, see [Enable Post Quantum Cryptography Support in Web Browsers](https://evertrust.io/education/enable-post-quantum-cryptography-support-in-web-browsers/)
+
 ## Adaptive proxy configuration
 
 The adaptive proxy configuration consists of the following files:
@@ -22,27 +36,65 @@ The adaptive proxy configuration consists of the following files:
 
 ### Build a test site with Astro and Starlight
 
-On our Linux host (Ubuntu 24.0.4 LTS), let's install httpd and npm, install corepack, and enable yarn.
+Some of the below was pulled out of [How To Create a Self-Signed SSL Certificate for Apache in Ubuntu 16.04](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-in-ubuntu-16-04)
+
+#### Prerequisites
+
+On our Linux host (Ubuntu 24.0.4 LTS), let's install httpd and npm, install corepack, enable yarn, and configure the firewall.
 
 ```tsx
-apt-get -y install apache2
+sudo apt update
+
+sudo apt-get -y install apache2
 
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
 
 sudo apt-get install -y nodejs
 
-corepack enable
+sudo corepack enable
 ```
+
+#### Enabling `mod_ssl`
+
+Enable `mod_ssl` with the `a2enmod` command:
+
+```tsx
+sudo a2enmod ssl
+```
+
+Restart Apache to activate the module:
+
+```
+sudo systemctl restart apache2
+```
+#### Create the SSL Certificate
+
+Create the SSL key and certificate files with the openssl command:
+
+```tsx
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
+```
+
+The entirety of the prompts will look something like this:
+```
+Country Name (2 letter code) [XX]:US
+State or Province Name (full name) []:Example
+Locality Name (eg, city) [Default City]:Example 
+Organization Name (eg, company) [Default Company Ltd]:Example Inc
+Organizational Unit Name (eg, section) []:Example Dept
+Common Name (eg, your name or your server's hostname) []:your_domain_or_ip
+Email Address []:webmaster@example.com
+```
+
+#### Build the test site
 
 Now let's build an Astro site with a Starlight template.
 
 ```tsx
-yarn create astro --install --no-git --typescript relaxed --template starlight /var/www/html/test-app
+sudo yarn create astro --install --no-git --typescript relaxed --template starlight /var/www/html/test-app
 ```
 
 This will create a directory called `/var/www/html/test-app`
-
-#### Build the test site
 
 Go into `test-app` and update the `astro.config.mjs` with the following:
 
@@ -81,7 +133,7 @@ export default defineConfig({
 Now run the build
 
 ```tsx
-yarn build
+sudo yarn build
 
 ```
 
@@ -89,18 +141,20 @@ This will build a viable site in `/var/www/html/test-app/build`
 
 #### Update apache config
 
-create a file called `/etc/apache2/sites-available/test-site.conf`
+Create a file called `/etc/apache2/sites-available/test-site.conf`
 
 Since we're running this in IBM Fyre, we're going to use the FQDN of our host here.
 
-```
+```apache
 Listen 8080
 
 <VirtualHost *:8080>
     DocumentRoot "/var/www/html/test-app/build"
     ServerName apache-host01.fyre.ibm.com
 
-    # Other directives here
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
+    SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
 </VirtualHost>
 ```
 
@@ -109,7 +163,7 @@ Enable the new config
 ```tsx
 cd /etc/apache2/sites-enabled
 
-ln -s ../sites-available/test-site.conf
+sudo ln -s ../sites-available/test-site.conf
 ```
 
 Now restart apache2
@@ -118,7 +172,7 @@ sudo systemctl restart apache2
 
 ```
 
-Verify the site is now up
+Verify the site is now up by navigating to https://apache-host01.fyre.ibm.com:8080.
 
 ![QSRAP-config1](../../../../assets/images/QSRAP-config1.png)
 
@@ -132,10 +186,11 @@ Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.con
 
 :::note[On NGINX configuration]
 
-There's likely better ways to configure this, but for this example, this works fine.
+By default, the best encryption Apache supports is TLSv1.2, so be sure to include 
+`proxy_ssl_protocols TLSv1.2` in the config as shown below.
 :::
 
-```tsx
+```nginx
 # IBM Confidential
 # PID: 5900-B8I
 # Copyright (c) IBM Corp. 2024
@@ -145,7 +200,8 @@ There's likely better ways to configure this, but for this example, this works f
 # file path in server: /etc/nginx/conf.d/location.conf
 
 location ^~ / {
-    proxy_pass http://apache-host01.fyre.ibm.com:8080/;
+    proxy_pass https://apache-host01.fyre.ibm.com:8080/;
+    proxy_ssl_protocols TLSv1.2;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
