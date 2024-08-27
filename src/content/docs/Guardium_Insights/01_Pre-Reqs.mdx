@@ -52,6 +52,14 @@ Install `homebrew` with the following command
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+#### Install Gnu-Sed
+
+MacOS and Linux use different versions of `sed`. Let's install `Gnu-Sed` for Mac with Homebrew as it will make some commands easier.
+
+```zsh
+brew install gnu-sed
+```
+
 </TabItem>
 <TabItem label="Windows">
 
@@ -67,6 +75,7 @@ iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
 ```
 </TabItem>
 </Tabs>
+
 
 ### Installing AWS CLI
 
@@ -346,6 +355,29 @@ scoop install go
 
 {/* Still in progress */}
 
+</TabItem>
+</Tabs>
+
+## Downloading the case file
+
+Retrieve the `ibm-guardium-insights` case file. As of this writing the latest is 2.4.0.
+
+<Tabs syncKey="OS">
+<TabItem label="MacOs">
+```tsx
+wget https://github.com/IBM/cloud-pak/raw/master/repo/case/ibm-guardium-insights/2.4.0/ibm-guardium-insights-2.4.0.tgz
+```
+Extract the downloaded casefile in your directory
+
+```tsx
+tar zxf ibm-guardium-insights-2.4.0.tgz
+```
+
+This should create a directory called `ibm-guardium-insights`
+
+</TabItem>
+<TabItem label="Windows">
+**TBD**
 </TabItem>
 </Tabs>
 
