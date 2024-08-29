@@ -525,17 +525,18 @@ If you did not export the `$file_system_id` variable, make sure the filesystem i
 
 :::
 
-Update it with the storage class id.
+Update it with the storage class id as well as the following vars
 ```bash
 sed -i "s/fileSystemId:.*/fileSystemId: $file_system_id/" EFSStorageClass.yaml
+sed -i "s/directoryPerms:.*/directoryPerms: \"777\"/" EFSStorageClass.yaml
+sed -i "/basePath:.*/d" EFSStorageClass.yaml
+sed -i "/parameters:/a\  gid: \"0\"\n  uid: \"0\"" EFSStorageClass.yaml
 ```
 
+{/*
 If using the default `sed` command that comes with MacOS
 
-```zsh
-
-sed -i "" "s/fileSystemId:.*/fileSystemId: $file_system_id/" EFSStorageClass.yaml
-```
+*/}
 
 Deploy the storage class.
 
@@ -602,6 +603,39 @@ kubectl get pvc
 ```tsx[OUTPUT]
 NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 block-pvc   Bound    pvc-dc711246-02a1-4a9d-b428-a2476b17dd8c   1Gi        RWO            efs-sc         <unset>                 4s
+```
+
+Now we can delete our test pod and pvc
+```tsx
+kubectl delete -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: block-pvc
+spec:
+  storageClassName: efs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+        - mountPath: "/var/www/html"
+          name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: block-pvc
+EOF
 ```
 
 ### Install NGINX Controller
@@ -825,6 +859,28 @@ ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succe
 
 ### Install Foundational Services
 
+:::note[Entitlement]
+As noted [here](../guardium_insights/01_pre-reqs/) make sure you have retrieved your entitlement key and applied it to the namespace
+
+Export your entitlement key as an env var
+
+```tsx
+export IBMKEY="<entitlement key>"
+```
+
+Set the entitlement key
+
+```tsx
+kubectl create secret docker-registry ibm-entitlement-key \
+    --docker-username=cp \
+    --docker-password=${IBMKEY} \
+    --docker-server=cp.icr.io \
+    --namespace=${NAMESPACE}
+```
+
+:::
+
+
 Change to the following directory
 ```tsx
 cd ibm-guardium-insights/inventory/install/files/support/eks
@@ -878,3 +934,44 @@ Validate the installation
 CRD commonservices.operator.ibm.com exists.
 operandrequest.operator.ibm.com/common-service unchanged
 ```
+
+{/*
+### CURRENT FAILURES
+
+A complete install of the ibm-common-services shows the following failure:
+
+```tsx
+create-postgres-license-config-7f88z                              0/1     Init:ImagePullBackOff   0          40s
+```
+
+Digging into the logs shows this as entitled software. This means it needs an IBM entitlement key.
+```tsx
+Events:
+  Type     Reason                           Age                From               Message
+  ----     ------                           ----               ----               -------
+  Normal   Scheduled                        57s                default-scheduler  Successfully assigned openshift-marketplace/create-postgres-license-config-7f88z to ip-192-168-17-40.ec2.internal
+  Normal   Pulling                          17s (x3 over 57s)  kubelet            Pulling image "cp.icr.io/cp/cpd/edb-postgres-license-provider@sha256:c1670e7dd93c1e65a6659ece644e44aa5c2150809ac1089e2fd6be37dceae4ce"
+  Warning  Failed                           17s (x3 over 56s)  kubelet            Failed to pull image "cp.icr.io/cp/cpd/edb-postgres-license-provider@sha256:c1670e7dd93c1e65a6659ece644e44aa5c2150809ac1089e2fd6be37dceae4ce": failed to pull and unpack image "cp.icr.io/cp/cpd/edb-postgres-license-provider@sha256:c1670e7dd93c1e65a6659ece644e44aa5c2150809ac1089e2fd6be37dceae4ce": failed to resolve reference "cp.icr.io/cp/cpd/edb-postgres-license-provider@sha256:c1670e7dd93c1e65a6659ece644e44aa5c2150809ac1089e2fd6be37dceae4ce": failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://cp.icr.io/oauth/token?scope=repository%3Acp%2Fcpd%2Fedb-postgres-license-provider%3Apull&service=registry: 400 Bad Request
+  Warning  Failed                           17s (x3 over 56s)  kubelet            Error: ErrImagePull
+  Warning  FailedToRetrieveImagePullSecret  2s (x6 over 57s)   kubelet            Unable to retrieve some image pull secrets (ibm-entitlement-key); attempting to pull the image may not succeed.
+  Normal   BackOff                          2s (x3 over 55s)   kubelet            Back-off pulling image "cp.icr.io/cp/cpd/edb-postgres-license-provider@sha256:c1670e7dd93c1e65a6659ece644e44aa5c2150809ac1089e2fd6be37dceae4ce"
+  Warning  Failed                           2s (x3 over 55s)   kubelet            Error: ImagePullBackOff
+```
+
+Also
+
+```tsx
+common-service-db-1-initdb-tmpwc                                  0/1     Pending                 0          2m36s
+```
+
+This appears to be hanging on an EFS volume being provisioned. Not sure why this is happening.
+
+```tsx
+kubectl get pvc
+NAME                      STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+common-service-db-1       Bound     pvc-adb72a84-4a21-4b6b-91bd-3b3969ea3a99   10Gi       RWO            efs-sc         <unset>                 2m50s
+common-service-db-1-wal   Pending                                                                        efs-sc         <unset>                 2m50s
+```
+
+It seems the path name was too long. We adjusted it by removing the path directive from the storage class
+*/}
