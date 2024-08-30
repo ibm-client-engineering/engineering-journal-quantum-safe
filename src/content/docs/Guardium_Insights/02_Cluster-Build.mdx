@@ -12,9 +12,6 @@ Some of these steps come from this documentation for [Guardium Insights on EKS](
 
 :::
 
-## Cluster Creation
-
-### Deploying a cluster with `eksctl`
 
 :::note
 This assumes you have already configured `eksctl` and your aws configuration with your account info.
@@ -32,6 +29,8 @@ Run the `eksctl` command below to create your first cluster and perform the foll
 :::caution[Multiple AZ support]
 As of this writing, GI v3.4.0 does not support multiple availability zones. 
 :::
+
+## Creating the cluster
 
 Let's set some env vars to make our lives easier
 
@@ -56,12 +55,12 @@ eksctl create cluster \
 --tags "Product=Guardium" \
 --managed
 ```
-### OIDC
+
 Associate an IAM oidc provider with the cluster if you didn't include `--with-oidc` above.
 ```tsx
 eksctl utils associate-iam-oidc-provider --region=${region} --cluster=${clustername} --approve
 ```
-### Configure `kubectl`
+## Configure `kubectl`
 
 Once the cluster is up, add it to your kube config. `eksctl` will probably do this for you.
 
@@ -107,14 +106,14 @@ Should return something like this
 ```
 */}
 
-### Install the EKS helm repo
+## Install the EKS helm repo
 
 ```tsx
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 ```
 
-### Install the EBS driver to the cluster
+## Install the EBS driver to the cluster
 
 We install the EBS CSI driver as this gives us access to GP3 block storage.
 
@@ -291,9 +290,11 @@ spec:
 EOF
 ```
 
-### Enable EFS on the cluster
+## Enable EFS on the cluster
 
 By default when we create a cluster with eksctl it defines and installs `gp2` storage class which is backed by Amazon's EBS (elastic block storage). After that we installed the EBS CSI driver to support `gp3`. However, both `gp2` and `gp3` are both block storage. They will not support RWX in our cluster. We need to install an EFS storage class.
+
+### Create IAM policy
 
 Download the IAM policy document from GitHub. You can also view the [policy document](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/docs/iam-policy-example.json)
         
@@ -337,6 +338,7 @@ Let's export that policy arn as another env var
 ```tsx
 export efs_driver_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`AmazonEKS_EFS_CSI_Driver_Policy`].Arn' --output text)
 ```
+### Create IAM role
 
 Create an IAM role and attach the IAM policy to it. Annotate the Kubernetes service account with the IAM role ARN and the IAM role with the Kubernetes service account name. 
 
@@ -364,6 +366,8 @@ NAMESPACE	NAME			ROLE ARN
 kube-system	ebs-csi-controller-sa	arn:aws:iam::803455550593:role/AmazonEKS_EBS_CSI_DriverRole
 kube-system	efs-csi-controller-sa	arn:aws:iam::803455550593:role/AmazonEKS_EFS_CSI_DriverRole
 ```
+
+### Install EFS CSI driver
 
 Now we just need our add-on registry address. This can be found here: https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
 
@@ -405,6 +409,7 @@ efs-csi-node-k52pt                    3/3     Running   0          2d17h
 efs-csi-node-r8nbm                    3/3     Running   0          2d17h
 ```
 
+### Create the EFS Filesystem
 Now we need to create the filesystem in EFS so we can use it
 
 Export the following variables. 
@@ -501,6 +506,7 @@ aws efs create-mount-target \
     --security-groups $security_group_id
 ```
 
+### Create EFS Storage Class
 Create a storage class for dynamic provisioning
 
 Let's get our filesystem ID if we don't already have it above. However if you ran the above steps, `$file_system_id` should already be defined.
@@ -513,55 +519,120 @@ aws efs describe-file-systems \
 fs-071439ffb7e10b67b
 ```
 
+{/*
 Download a `StorageClass` manifest for Amazon EFS.
 ```tsx
 curl -o EFSStorageClass.yaml https://raw.githubusercontent.com/kubernetes-sigs/aws-efs-csi-driver/master/examples/kubernetes/dynamic_provisioning/specs/storageclass.yaml
 
 ```
+*/}
 
 :::note[Super Important!]
 
 If you did not export the `$file_system_id` variable, make sure the filesystem id you use in the below command is the filesystem id that was returned to you above!
 
+{/*
+You can retrieve the file system id with the following command:
+
+```tsx
+
+```
+*/}
+
+Also if you are going to use EFS as your default storage, follow the instructions below. Otherwise just create the `efs-sc` storage class and skip the `efs-sc-pg` storage class as we will set the default to the gp3 block storage.
+
 :::
 
+Create the storage class
+
+```tsx
+cat <<EOF | envsubst | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+parameters:
+  uid: "0"
+  gid: "0"
+  directoryPerms: "777"
+  fileSystemId: ${file_system_id}
+  provisioningMode: efs-ap
+provisioner: efs.csi.aws.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+EOF
+```
+
+Create this second storageclasses for EFS for common-services operator that will be installed as part of IBM Foundational Services. You will only need this second storage class if you intend on using EFS instead of block storage.
+
+```tsx
+cat <<EOF | envsubst | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc-pg
+parameters:
+  uid: "26"
+  gid: "65534"
+  directoryPerms: "777"
+  fileSystemId: ${file_system_id}
+  provisioningMode: efs-ap
+provisioner: efs.csi.aws.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+EOF
+```
+
+{/*
 Update it with the storage class id as well as the following vars
 ```bash
-sed -i "s/fileSystemId:.*/fileSystemId: $file_system_id/" EFSStorageClass.yaml
-sed -i "s/directoryPerms:.*/directoryPerms: \"777\"/" EFSStorageClass.yaml
-sed -i "/basePath:.*/d" EFSStorageClass.yaml
+sed -i "s/fileSystemId:.*\/fileSystemId: $file_system_id/" EFSStorageClass.yaml
+sed -i "s/directoryPerms:.*\/directoryPerms: \"777\"/" EFSStorageClass.yaml
+sed -i "/basePath:.*\/d" EFSStorageClass.yaml
 sed -i "/parameters:/a\  gid: \"0\"\n  uid: \"0\"" EFSStorageClass.yaml
 ```
+*/}
 
 {/*
 If using the default `sed` command that comes with MacOS
 
-*/}
 
 Deploy the storage class.
 
 ```bash
 kubectl apply -f EFSStorageClass.yaml
 ```
+*/}
 
-Set EFS as the default storage class
 
+:::note[Setting Default Storage Class]
+Set one of the EFS storage classes as the default storage class only if you intend on primarily using EFS. Otherwise set block storage as default.
+
+If using EFS as primary storage
 ```bash
 kubectl patch storageclass efs-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ```
 
-Finally, verify it's there
+If using EBS(block) as primary storage
+```bash
+kubectl patch storageclass ebs-gp3-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+:::
+
+
+Finally, verify they are both there
 ```tsx
 kubectl get sc
 NAME               PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-ebs-gp3-sc         ebs.csi.aws.com         Delete          WaitForFirstConsumer   false                  32m
-efs-sc (default)   efs.csi.aws.com         Delete          Immediate              false                  79s
-gp2                kubernetes.io/aws-ebs   Delete          WaitForFirstConsumer   false                  71m
+ebs-gp3-sc         ebs.csi.aws.com         Delete          WaitForFirstConsumer   false                  6d18h
+efs-sc (default)   efs.csi.aws.com         Delete          Immediate              false                  16h
+efs-sc-pg          efs.csi.aws.com         Delete          Immediate              false                  14h
+gp2                kubernetes.io/aws-ebs   Delete          WaitForFirstConsumer   false                  6d23h
 ```
 
 ### Verify EFS
 
-Run the following command to create a pod and a PVC using the EFS storage class
+Run the following command to create a pod and a PVC using the default EFS storage class
 
 ```tsx
 kubectl apply -f - <<EOF
@@ -638,16 +709,13 @@ spec:
 EOF
 ```
 
-### Install NGINX Controller
-
+## Install NGINX Controller
 
 Let's install the NGINX helm chart
 ```tsx
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 ```
-
-
 
 {/*
 Modify the NGINX controller deployment file
@@ -764,6 +832,9 @@ Now apply the deployment
 kubectl apply -f nginx-deploy.yaml
 ```
 */}
+
+### Verify the NGINX deployment
+
 Verify the deployment
 
 Command:
@@ -789,7 +860,7 @@ kube-system	efs-csi-controller-sa		arn:aws:iam::748107796891:role/eksctl-filenet
 ```
 */}
 
-### Install the Operator Lifecycle Manager
+## Install the Operator Lifecycle Manager
 
 Run the following command using the `operator-sdk`
 
@@ -807,7 +878,7 @@ kubectl get csv -n olm | grep packageserver
 packageserver   Package Server   0.28.0               Succeeded
 ```
 
-### Create the required Namespace
+## Create the required Namespace
 
 ```tsx
 kubectl create ns openshift-marketplace
@@ -821,7 +892,7 @@ export NAMESPACE=openshift-marketplace
 kubectl config set-context --current --namespace $NAMESPACE
 ```
 
-### Install the IBM Cert Manager
+## Install the IBM Cert Manager
 
 If you followed the directions [here](../01_pre-reqs/#downloading-the-case-file) you should have the `ibm-guardium-insights` case file downloaded and extracted.
 
@@ -857,7 +928,7 @@ NAME                               DISPLAY            VERSION   REPLACES   PHASE
 ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succeeded
 ```
 
-### Install Foundational Services
+## Install Foundational Services
 
 :::note[Entitlement]
 As noted [here](../guardium_insights/01_pre-reqs/) make sure you have retrieved your entitlement key and applied it to the namespace
@@ -895,13 +966,74 @@ export NAMESPACE=openshift-marketplace
 
 {/*We're going to use the loadbalancer name for this as we aren't using any DNS (hope it works)*/}
 
-We set the domain in our remote dns to `apps.gi.think-forward.work`
+For our example setup, we are working with the `thinkforward.work` domain. So we set the domain in our remote dns to `apps.gi.thinkforward.work`. Other users may need to configure their FQDN in AWS Route 53.
 
 ```tsx
-export HOSTNAME=apps.gi.think-forward.work
+export HOSTNAME=apps.gi.thinkforward.work
 ```
 
-Now run the CPFS install script
+:::note[On Storageclasses]
+
+Make the following modifications to the `CPFS-install-template.sh` ONLY if you are using the custom EFS storage class instead of block storage.
+
+Open the CPFS-install-template.sh in an editor and locate the following code block
+
+```tsx
+operand_request=$(cat <<EOF
+apiVersion: operator.ibm.com/v1alpha1
+kind: OperandRequest
+metadata:
+  name: common-service
+  namespace: $NAMESPACE
+spec:
+  requests:
+    - operands:
+        - name: ibm-im-operator
+        - name: ibm-platformui-operator
+        - name: cloud-native-postgresql
+        - name: ibm-events-operator
+      registry: common-service
+      registryNamespace: $NAMESPACE
+EOF
+)
+```
+
+Insert the following line just before that code block
+
+```tsx
+sleep 30
+kubectl patch --type=merge commonservice common-service -p '{"spec": {"storageClass":"efs-sc-pg"}}'
+```
+
+Now it should look like the following
+
+```tsx
+sleep 30
+kubectl patch --type=merge commonservice common-service -p '{"spec": {"storageClass":"efs-sc-pg"}}'
+
+operand_request=$(cat <<EOF
+apiVersion: operator.ibm.com/v1alpha1
+kind: OperandRequest
+metadata:
+  name: common-service
+  namespace: $NAMESPACE
+spec:
+  requests:
+    - operands:
+        - name: ibm-im-operator
+        - name: ibm-platformui-operator
+        - name: cloud-native-postgresql
+        - name: ibm-events-operator
+      registry: common-service
+      registryNamespace: $NAMESPACE
+EOF
+)
+```
+We're adding the `sleep 30` so the common-services CR will become available
+:::
+{/*Mental note here, Delete everything and test without creating the operands so we can make sure that the CR is actually created prior to the operand installation*/}
+
+### Run the CPFS install script
 
 ```tsx
 chmod +x CPFS-install-template.sh
@@ -975,3 +1107,136 @@ common-service-db-1-wal   Pending                                               
 
 It seems the path name was too long. We adjusted it by removing the path directive from the storage class
 */}
+
+
+{/*
+
+Getting the uid/gid for postgres (for the storage class)
+
+```tsx
+kubectl describe clusters.postgresql.k8s.enterprisedb.io common-service-db | egrep "UID|GID"
+```
+
+Should return a bunch of stuff, but we want this
+
+```tsx
+  UID:                 1cd7dd91-bf67-4fbe-8967-44323dad3b55
+  Postgres GID:               26
+  Postgres UID:               26
+```
+
+So questions....
+
+- How do we specify the storage class for this instead of depending on whatever is set to default?
+
+We updated the efs-sc storage class by deleting it, adding the uid of 26 and setting gid to 65534 and reapplying it.
+
+Now we are testing the deployment again.
+
+BANG IT WORKS
+
+Things to check on
+
+Updating the common-service-db CR to use a specific storage class
+
+*/}
+
+### Verify Foundational Services are properly installed
+
+```tsx
+kubectl get csv | grep ibm
+
+ibm-cert-manager-operator.v4.2.7              IBM Cert Manager                       4.2.7                                        Succeeded
+ibm-common-service-operator.v4.6.2            IBM Cloud Pak foundational services    4.6.2                                        Succeeded
+ibm-commonui-operator.v4.4.1                  Ibm Common UI                          4.4.1                                        Succeeded
+ibm-events-operator.v5.0.1                    IBM Events Operator                    5.0.1                                        Succeeded
+ibm-iam-operator.v4.5.1                       IBM IM Operator                        4.5.1                                        Succeeded
+ibm-zen-operator.v5.1.4                       IBM Zen Service                        5.1.4                                        Succeeded
+```
+
+### Verify that the operand requests have completed and installed
+
+```tsx
+kubectl get opreq
+
+NAME                          AGE   PHASE     CREATED AT
+common-service                97m   Running   2024-08-30T13:45:01Z
+ibm-iam-request               97m   Running   2024-08-30T13:45:29Z
+postgresql-operator-request   96m   Running   2024-08-30T13:45:58Z
+```
+
+### Patch the common-service CR to accept the license
+
+```tsx
+kubectl patch commonservices common-service --type merge -p '{"spec":{"license":{"accept":true}}}'
+```
+
+## Install network policies for Foundational Services
+
+```tsx
+export CS_NAMESPACE=openshift-marketplace
+cp -R ibm-guardium-insights/inventory/ibmCommonServiceOperatorSetup/files/cp3-networkpolicy/ingress ibm-guardium-insights/inventory/install/files/support/eks/
+./install_networkpolicy.sh -n $CS_NAMESPACE
+```
+
+Verify the policies have all been created
+
+```tsx
+kubectl get netpol
+NAME                                     POD-SELECTOR                                     AGE
+access-to-audit-svc                      component=zen-audit                              86m
+access-to-common-web-ui                  k8s-app=common-web-ui                            87m
+access-to-edb-postgres                   k8s.enterprisedb.io/cluster                      86m
+access-to-edb-postgres-webhooks          app.kubernetes.io/name=cloud-native-postgresql   86m
+access-to-ibm-common-service-operator    name=ibm-common-service-operator                 86m
+access-to-ibm-nginx                      component=ibm-nginx                              86m
+access-to-icp-mongodb                    app=icp-mongodb                                  86m
+access-to-platform-auth-service          k8s-app=platform-auth-service                    86m
+access-to-platform-identity-management   k8s-app=platform-identity-management             86m
+access-to-platform-identity-provider     k8s-app=platform-identity-provider               86m
+access-to-usermgmt                       component=usermgmt                               86m
+access-to-volumes                        icpdsupport/app=volumes                          86m
+access-to-zen-core                       component=zen-core                               86m
+access-to-zen-core-api                   component=zen-core-api                           86m
+access-to-zen-meta-api                   app.kubernetes.io/instance=ibm-zen-meta-api      86m
+access-to-zen-minio                      component=zen-minio                              86m
+access-to-zen-watchdog                   component=zen-watchdog                           86m
+allow-iam-config-job                     component=iam-config-job                         86m
+allow-webhook-access-from-apiserver      <none>                                           86m
+```
+
+## Install Kubernetes Ingresses
+
+Export the following values. As above, the example FQDN we are using is `apps.gi.thinkforward.work`. Yours may be different depending on what you've set in your DNS or Route 53.
+```tsx
+export REPLACE_NAMESPACE=openshift-marketplace
+export HOSTNAME=apps.gi.thinkforward.work
+```
+
+Run the Configmap creation with the following commands
+
+```tsx
+while [[ $(kubectl get secret platform-oidc-credentials -ojsonpath='{.data.WLP_CLIENT_SECRET}' | base64 -d | wc -c) -eq 0 ]] ; do echo Waiting 30 seconds for platform-oidc-credentials to be created with the correct content; sleep 30; done
+client_id="$(kubectl get secret platform-oidc-credentials -o yaml |grep 'WLP_CLIENT_ID:' | sed 's/WLP_CLIENT_ID: *//')"
+client_id=`echo $client_id|base64 --decode`
+echo $client_id
+
+
+cat cpfs-ingress-template.yaml | sed 's#REPLACE_CLIENT_ID#'$client_id'#g' | sed 's#REPLACE_NAMESPACE#'$NAMESPACE'#g' | sed 's#REPLACE_HOSTNAME#'$HOSTNAME'#g' | kubectl apply -f -
+```
+
+Verify the ingress creation
+
+```tsx
+kubectl get ingress
+NAME                         CLASS   HOSTS                                                         ADDRESS   PORTS   AGE
+cncf-common-web-ui           nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-id-mgmt                 nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-platform-auth           nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-platform-id-auth        nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-platform-id-provider    nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-platform-login          nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-platform-oidc           nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-saml-ui-callback        nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+cncf-social-login-callback   nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
+```
