@@ -54,11 +54,11 @@ export default defineConfig({
         autogenerate: {
           directory: 'QSE'
         }
-//      },{
-//        label: 'Guardium Insights',
-//        autogenerate: {
-//          directory: 'Guardium_Insights'
-//        }
+      },{
+        label: 'Guardium Insights',
+        autogenerate: {
+          directory: 'Guardium_Insights'
+        }
       },{
         label: 'Reference',
         items: [
