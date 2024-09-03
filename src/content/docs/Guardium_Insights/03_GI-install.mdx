@@ -8,5 +8,335 @@ sidebar:
 
 :::note[Useful Links]
 A lot of content cribbed from [here](https://www.ibm.com/docs/en/guardium-insights/3.x?topic=eks-install-guardium-insights-operator-related-components)
+
+You will need your IBM Entitlement Key for the next steps. You should already have it available at this point, but it can also be retrieved from [here](https://myibm.ibm.com/products-services/containerlibrary)
 :::
 
+## Obtaining the CASE bundle for GI
+
+Export the following env vars. This assumes we have been installing in the `openshift-marketplace` namespace.
+
+As of this writing, we are using Guardium Insights version `3.4.0` which uses the `2.4.0` bundle file.
+
+```tsx
+export CP_REPO_USER="cp"
+export CP_REPO_PASS=<Your Password / Entitlement Key to cp.icr.io>
+export NAMESPACE="openshift-marketplace"
+export CASE_NAME=ibm-guardium-insights
+export CASE_VERSION=2.4.0
+export LOCAL_CASE_DIR=$HOME/.ibm-pak/data/cases/$CASE_NAME/$CASE_VERSION
+export GI_INVENTORY_SETUP=install
+export IBMPAK_LAUNCH_SKIP_PREREQ_CHECK=true
+```
+
+Save the CASE bundle locally
+
+```tsx
+oc ibm-pak get $CASE_NAME \
+--version $CASE_VERSION \
+--skip-verify
+```
+
+This will download the CASE bundle to `$HOME/.ibm-pak/data/cases/ibm-guardium-insights/2.4.0`
+
+## Install the GI Operator
+
+Set the context to the correct namespace
+
+```tsx
+kubectl config set-context --current --namespace=${NAMESPACE}
+```
+
+
+### Collect the node names
+
+In most installations you can label specific nodes to be used for DB2. In our case, we are just going to label all the compute nodes as part of the pre-install.
+
+```tsx
+NODES=$(kubectl get nodes -o jsonpath='{.items[*].metadata.name}')
+NODES=$(echo $NODES | tr ' ' ',')
+echo $NODES
+```
+
+Should return output similar to this
+
+```tsx
+ip-192-168-10-208.ec2.internal,ip-192-168-17-40.ec2.internal,ip-192-168-23-220.ec2.internal
+```
+
+### Run the pre-install
+
+```tsx
+oc ibm-pak launch $CASE_NAME \
+   --version $CASE_VERSION \
+   --inventory $GI_INVENTORY_SETUP \
+   --action pre-install \
+   --namespace $NAMESPACE \
+   --args "-n ${NAMESPACE} -h ${NODES} -t false -l true -e true"
+```
+
+This should return the following
+```tsx
+Welcome to the CASE launcher
+Attempting to retrieve and extract the CASE from the specified location
+[✓] CASE has been retrieved and extracted
+Attempting to validate the CASE
+[✓] CASE has been successfully validated
+Attempting to locate the launch inventory item, script, and action in the specified CASE
+[✓] Found the specified launch inventory item, action, and script for the CASE
+Skipping CASE defined prerequisite checks for the specified action
+Executing inventory item install, action preInstall : launch.sh
+-------------Installing dependent GI preinstall: /var/folders/tp/zkf5_qld1wn_ms51xys8d0m00000gn/T/extractedCASELauncher1330610821/ibm-guardium-insights-------------
+PRE-INSTALL VALUES:
+ -n openshift-marketplace -h ip-192-168-10-208.ec2.internal,ip-192-168-17-40.ec2.internal,ip-192-168-23-220.ec2.internal -t false -l true -e true
+Warning : One or more optional parameters not passed, default values will be used
+OpenSSL is working with parameters -pbkdf2
+#####IBM Guardium Insights Pre-installation: Starting Preparation#####
+The system properties of the nodes
+Skipping due to NON_OCP being true
+The system properties of the nodes
+Skipping the system properties due to NON_OCP being true
+node/ip-192-168-10-208.ec2.internal labeled
+node/ip-192-168-17-40.ec2.internal labeled
+node/ip-192-168-23-220.ec2.internal labeled
+Skipping data node(s) tainting.
+Node ip-192-168-10-208.ec2.internal already labelled.
+Node ip-192-168-17-40.ec2.internal already labelled.
+Node ip-192-168-23-220.ec2.internal already labelled.
+##### IBM Guardium Insights Pre-installation: Custom SCC creation#####
+Skipping custom scc creation
+#####IBM Guardium Insights Pre-installation: Ingress Certificate Recreation#####
+Overwrite existing secrets mode: no
+--------------------------------------------------------------
+Starting: IBM Guardium Insights: Ingress creation script.
+Skipping certificate generation. Certificate creation is handled by the Guardium Insights Deployment.
+Completed: IBM Guardium Insights : Ingress creation script.
+--------------------------------------------------------------
+[✓] CASE launch script completed successfully
+```
+
+### Verify the node labeling
+
+```tsx
+kubectl get nodes --no-headers -o custom-columns=":metadata.name" | xargs -I {} sh -c 'oc describe node {} | grep db2 | grep -v $NAMESPACE'
+```
+
+Should return
+```tsx
+                    icp4data=database-db2wh
+                    icp4data=database-db2wh
+                    icp4data=database-db2wh
+```
+
+### Install the operator catalogs
+
+```tsx
+oc ibm-pak launch $CASE_NAME \
+   --version $CASE_VERSION \
+   --inventory $GI_INVENTORY_SETUP \
+   --action install-catalog \
+   --namespace $NAMESPACE \
+   --args "--inputDir ${LOCAL_CASE_DIR}"
+```
+
+Verify the Catalog Sources were installed
+
+```tsx {4-6}
+kubectl get catsrc
+NAME                                     DISPLAY                                  TYPE   PUBLISHER   AGE
+cloud-native-postgresql-catalog          Cloud Native Postgresql Catalog          grpc   IBM         3d21h
+ibm-db2uoperator-catalog                 IBM Db2U Catalog                         grpc   IBM         3m18s
+ibm-guardium-insights-operator-catalog   IBM Security Guardium Insights Catalog   grpc   IBM         2m31s
+ibm-redis-cp-operator-catalog            IBM Redis CP Catalog                     grpc   IBM         2m37s
+opencloud-operators                      IBMCS Operators                          grpc   IBM         3d21h
+```
+
+### Install the Operators
+
+```tsx
+oc ibm-pak launch $CASE_NAME \
+   --version $CASE_VERSION \
+   --inventory $GI_INVENTORY_SETUP \
+   --action install-operator \
+   --namespace ${NAMESPACE} \
+   --args "--registry cp.icr.io --user ${CP_REPO_USER} --pass ${CP_REPO_PASS} --secret ibm-entitlement-key --inputDir ${LOCAL_CASE_DIR}"
+```
+
+Verify the installation of the operators
+
+```tsx {5,7,11}
+kubectl get sub
+NAME                                          PACKAGE                          SOURCE                                   CHANNEL
+cloud-native-postgresql                       cloud-native-postgresql          cloud-native-postgresql-catalog          stable
+ibm-common-service-operator                   ibm-common-service-operator      opencloud-operators                      v4.6
+ibm-db2uoperator-catalog-subscription         db2u-operator                    ibm-db2uoperator-catalog                 v110509.0
+ibm-events-operator                           ibm-events-operator              opencloud-operators                      v3
+ibm-guardium-insights-operator-subscription   ibm-guardium-insights-operator   ibm-guardium-insights-operator-catalog   v3.4
+ibm-idp-config-ui-operator                    ibm-commonui-operator-app        opencloud-operators                      v4.4
+ibm-im-operator                               ibm-iam-operator                 opencloud-operators                      v4.5
+ibm-platformui-operator                       ibm-zen-operator                 opencloud-operators                      v4.4
+ibm-redis-cp-operator-catalog-subscription    ibm-redis-cp                     ibm-redis-cp-operator-catalog            v1.1
+operand-deployment-lifecycle-manager-app      ibm-odlm                         opencloud-operators                      v4.3
+```
+
+## Deploying an instance of Guardium Insights
+
+:::note[Useful Links]
+Content heavily borrowed from [here](https://www.ibm.com/docs/en/guardium-insights/3.x?topic=eks-deploying-guardium-insights-instance)
+
+:::
+
+### Guardium CR
+
+This is a usable example. Copy this to a new yaml file.
+
+We want to set the following values in this file
+```tsx
+  name: gi-eks
+  namespace: openshift-marketplace
+
+```
+
+This will install an instance with the sizing set to `values-small`
+
+`gi-custom-eks.yaml`
+```yaml
+apiVersion: gi.ds.isc.ibm.com/v1
+kind: GuardiumInsights
+metadata:
+  name: gi-eks
+  namespace: openshift-marketplace
+spec:
+  dependency-security:
+    networkPolicy:
+      egresses:
+        enabled: false
+        egress-required-allow:
+          egress:
+            - ports:
+                - protocol: UDP
+                  port: 443
+                - protocol: TCP
+                  port: 443
+                - protocol: UDP
+                  port: 53
+                - protocol: TCP
+                  port: 53
+  version: 3.4.0
+  license:
+    accept: true
+    licenseType: "L-ZNAM-9BHMTZ"
+  dependency-postgres:
+    podContainerSecurityContextParams:
+      fsGroup: 0
+      runAsUser: 1000
+      runAsNonRoot: true
+  dependency-kafka:
+   podContainerSecurityContextParams:
+      fsGroup: 0
+      runAsUser: 1000
+      runAsNonRoot: true
+  dependency-redis:
+   podContainerSecurityContextParams1:
+      fsGroup: 0
+      runAsUser: 1000
+      runAsNonRoot: true
+  guardium-agent-cert-generator:
+   podContainerSecurityContextParams:
+     fsGroup: 0
+     runAsUser: 1000
+  mini-snif:
+    podContainerSecurityContextParams:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsNonRoot: false
+    replicaCount: 1
+  dependency-db2:
+    db2instance:
+      nodes: 1
+      storage:
+          - name: meta
+            spec:
+              accessModes:
+              - ReadWriteMany
+              resources:
+                requests:
+                  storage: 100Gi
+              storageClassName: efs-sc
+            type: create
+          - name: data
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 100Gi
+              storageClassName: efs-sc
+            type: template
+          - name: backup
+            spec:
+              accessModes:
+              - ReadWriteMany
+              resources:
+                requests:
+                  storage: 100Gi
+              storageClassName: efs-sc
+            type: create
+          - name: tempts
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 100Gi
+              storageClassName: efs-sc
+            type: template  
+          - name: archivelogs
+            spec:
+              accessModes:
+              - ReadWriteMany
+              resources:
+                requests:
+                  storage: 200Gi
+              storageClassName: efs-sc
+            type: create       
+
+  guardiumInsightsGlobal:
+    deploymentOptions:
+      prometheusType: disabled
+    fsGroupGid: 0
+    networkPolicyPodToPod:
+      enabled: false
+    backupsupport:
+      enabled: "false"
+      name: backup-pvc-support
+    image:
+      insightsPullSecret: ibm-entitlement-key
+      repository: cp.icr.io/cp/ibm-guardium-insights
+    size: values-small
+    insights:
+      ingress:
+        hostName: guardium.apps.gi.thinkforward.work
+        domainName: apps.gi.thinkforward.work
+      ics:
+        namespace: openshift-marketplace #staging
+        registry: common-service
+    storageClassName: efs-sc
+    storageClassNameRWO: efs-sc
+    deploySettings:
+      nonOCP: true
+      ensureDb2InstallPlacement: true
+  ssh-service:
+    serviceAnnotations:
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+```
+
+Apply the above CR 
+
+```tsx
+kubectl apply -f gi-custom-eks.yaml
+```
