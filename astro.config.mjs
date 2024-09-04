@@ -54,11 +54,11 @@ export default defineConfig({
         autogenerate: {
           directory: 'QSE'
         }
-//      },{
-//        label: 'QSPM',
-//        autogenerate: {
-//          directory: 'QSPM'
-//        }
+      },{
+        label: 'Guardium Insights',
+        autogenerate: {
+          directory: 'Guardium_Insights'
+        }
       },{
         label: 'Reference',
         items: [
@@ -71,6 +71,11 @@ export default defineConfig({
             label: 'QSE',
             badge: 'IBM',
             link: 'https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x',
+          },
+          {
+            label: 'Guardium Insights',
+            badge: 'IBM',
+            link: 'https://www.ibm.com/docs/en/guardium-insights/3.x?topic=scenarios-installation-amazon-elastic-kubernetes-service-eks',
           }
         ]
       }
