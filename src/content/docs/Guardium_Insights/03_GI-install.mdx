@@ -197,6 +197,8 @@ We want to set the following values in this file
 
 ```
 
+Also we will be setting the RWO storage classes to use the gp3 block storage class we created `ebs-gp3-sc`
+
 This will install an instance with the sizing set to `values-small`
 
 `gi-custom-eks.yaml`
@@ -275,7 +277,7 @@ spec:
               resources:
                 requests:
                   storage: 100Gi
-              storageClassName: efs-sc
+              storageClassName: ebs-gp3-sc
             type: template
           - name: backup
             spec:
@@ -293,7 +295,7 @@ spec:
               resources:
                 requests:
                   storage: 100Gi
-              storageClassName: efs-sc
+              storageClassName: ebs-gp3-sc
             type: template  
           - name: archivelogs
             spec:
@@ -326,7 +328,7 @@ spec:
         namespace: openshift-marketplace #staging
         registry: common-service
     storageClassName: efs-sc
-    storageClassNameRWO: efs-sc
+    storageClassNameRWO: ebs-gp3-sc
     deploySettings:
       nonOCP: true
       ensureDb2InstallPlacement: true
@@ -340,3 +342,86 @@ Apply the above CR
 ```tsx
 kubectl apply -f gi-custom-eks.yaml
 ```
+
+The deployment may take a little while.
+
+{/*
+### Stupid error tricks
+
+ldap pods are stuck. One is in an error state due to insufficient ephemeral storage (wtf)
+
+```tsx
+kubectl get pods | grep ldap
+c-gi-eks-db2-ldap-6bdbdf8fc7-flh8b                                0/1     Error                   0                 18h
+c-gi-eks-db2-ldap-6bdbdf8fc7-kmqdx                                0/1     Running                 0                 7h1m
+
+```
+
+We describe the errored pod
+
+```tsx {21-23}
+kubectl describe pod c-gi-eks-db2-ldap-6bdbdf8fc7-flh8b
+
+Name:             c-gi-eks-db2-ldap-6bdbdf8fc7-flh8b
+Namespace:        openshift-marketplace
+Priority:         0
+Service Account:  account-openshift-marketplace-gi-eks-db2
+Node:             ip-192-168-17-40.ec2.internal/192.168.17.40
+Start Time:       Tue, 03 Sep 2024 15:50:04 -0400
+Labels:           app=gi-eks-db2
+                  formation_id=gi-eks-db2
+                  pod-template-hash=6bdbdf8fc7
+                  role=ldap
+Annotations:      cloudpakId: 5ed3ce3e032545a0a2a17bf2b6c23dcd
+                  cloudpakMetric: RESOURCE_UNIT
+                  cloudpakName: IBM Security Guardium Package SW
+                  productChargedContainers: All
+                  productCloudpakRatio: 1:100
+                  productID: 4c49ee7d8da44cf9bf2da48fc8fabb11
+                  productMetric: MANAGED_VIRTUAL_SERVER
+                  productName: IBM Security Guardium Insights
+Status:           Failed
+Reason:           Evicted
+Message:          Pod ephemeral local storage usage exceeds the total limit of containers 5Mi.
+```
+
+The other pod is hung because this pod hasn't come up. They both have the same resource restrictions. Just WTF.
+
+Other errors
+
+```tsx
+kubectl get pods | grep db2u
+c-gi-eks-db2-db2u-0                                               0/1     Init:CrashLoopBackOff   211 (2m41s ago)   18h
+```
+
+db2 pod is stuck in a crash loop.
+
+```tsx
+Status:           Pending
+IP:               192.168.31.213
+IPs:
+  IP:  192.168.31.213
+Init Containers:
+  instdb:
+    Container ID:  containerd://28ce603c5c63398d080938e3d37dbfaa7fdea60f5b71ca5e53c0a51a5ecdc5f6
+    Image:         icr.io/db2u/db2u.instdb@sha256:cf2f99358fb6beac6ca2f9553855b8f33d4cfcd7748bd191c66b725180722cab
+    Image ID:      icr.io/db2u/db2u.instdb@sha256:cf2f99358fb6beac6ca2f9553855b8f33d4cfcd7748bd191c66b725180722cab
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /bin/sh
+      -c
+      /Db2wh_preinit/instdb_entrypoint.sh
+    State:          Waiting
+      Reason:       CrashLoopBackOff
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Wed, 04 Sep 2024 09:54:45 -0400
+      Finished:     Wed, 04 Sep 2024 09:54:54 -0400
+    Ready:          False
+    Restart Count:  211
+```
+
+the `initdb` init container in the pod is failing for... reasons. Just awesome.
+*/}
