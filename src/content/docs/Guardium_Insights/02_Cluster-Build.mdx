@@ -21,9 +21,9 @@ This also assumes you will be creating the cluster in the us-east region. This c
 
 Run the `eksctl` command below to create your first cluster and perform the following:
 
--   Create a 3-node Kubernetes cluster named `gi-east` with node type as `m6i.4xlarge` and region as `us-east-1`.
+-   Create a 4-node Kubernetes cluster named `gi-east` with node type as `m6i.4xlarge` and region as `us-east-1`.
 -   Control plane is managed by AWS EKS, so sizing for control plane nodes doesn't apply.
--   Define a minimum of one node (`--nodes-min 1`) and a maximum of three-node (`--nodes-max 3`) for this node group managed by EKS.
+-   Define a minimum of one node (`--nodes-min 4`) and a maximum of three-node (`--nodes-max 6`) for this node group managed by EKS.
 -   Create a node group with the name `guardium-workers` and select a machine type for the `guardium-workers` node group.
 
 :::caution[Multiple AZ support]
@@ -48,9 +48,9 @@ eksctl create cluster \
 --nodegroup-name guardium-workers \
 --node-type m6i.4xlarge \
 --with-oidc \
---nodes 3 \
---nodes-min 1 \
---nodes-max 3 \
+--nodes 4 \
+--nodes-min 4 \
+--nodes-max 6 \
 --node-zones ${region}a \
 --tags "Product=Guardium" \
 --managed
