@@ -345,6 +345,47 @@ kubectl apply -f gi-custom-eks.yaml
 
 The deployment may take a little while.
 
+### Verifying instance is up
+
+Check to make sure the Guardium Insights custom resource (CR) has been completely reconciled.
+
+```tsx {3}
+kubectl get gi
+NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
+gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+```
+
+Check that the tenant has been created
+
+```tsx {3}
+kubectl get tenantminisnif
+NAME                           TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
+gi-eksctqdrippjy9p2gqvvzwhyc   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+```
+
+Verify all ingress paths have been created
+```tsx {12-18}
+kubectl get ingress -n openshift-marketplace
+NAME                                            CLASS    HOSTS                                                          ADDRESS                                                                         PORTS     AGE
+cncf-common-web-ui                              nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-id-mgmt                                    nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-platform-auth                              nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-platform-id-auth                           nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-platform-id-provider                       nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-platform-login                             nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-platform-oidc                              nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-saml-ui-callback                           nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+cncf-social-login-callback                      nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
+gi-eks-apigateway-api                           nginx    guardium.apps.gi.thinkforward.work                             a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80, 443   23h
+gi-eks-apigateway-docs-dev                      nginx    guardium.apps.gi.thinkforward.work                             a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80, 443   23h
+gi-eks-insights                                 nginx    guardium.apps.gi.thinkforward.work                             a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80, 443   23h
+gi-eks-s3                                       nginx    s3.guardium.apps.gi.thinkforward.work                          a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80, 443   21h
+gi-eks-ssh-service                              <none>   guardium.apps.gi.thinkforward.work                                                                                                             80, 443   23h
+gi-eksctqdrippjy9p2gqvvzwhyc-snif-picker-feed   nginx    feed-ctqdrippjy9p2gqvvzwhyc-gi-eks.apps.gi.thinkforward.work   a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        20h
+gi-eksctqdrippjy9p2gqvvzwhyc-snif-picker-unix   nginx    unix-ctqdrippjy9p2gqvvzwhyc-gi-eks.apps.gi.thinkforward.work   a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        20h
+```
+
+Since we installed everything into the `openshift-marketplace` namespace, we should see everything there.
 {/*
 ### Stupid error tricks
 
