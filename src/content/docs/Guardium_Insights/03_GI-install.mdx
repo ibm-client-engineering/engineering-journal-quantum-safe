@@ -453,7 +453,7 @@ Create an auth header
 ```tsx
 export AUTH=$(echo -ne "cpadmin:$CPPASS" | base64)
 ```
-
+{/*
 Create a JSON
 `payload.json`
 ```json
@@ -466,6 +466,7 @@ Create a JSON
 }
 
 ```
+*/}
 
 And now let's submit the request. Our API url is `https://guardium.apps.gi.thinkforward.work/api/v3/tenants`. This is the URL we set in the CR. 
 
