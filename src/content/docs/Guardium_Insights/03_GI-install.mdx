@@ -196,6 +196,13 @@ We want to set the following values in this file
   namespace: openshift-marketplace
 
 ```
+And under `ingress` set the hostname (`guardium.apps.gi.thinkforward.work` in our example) and make sure the FQDN is the one we set. 
+```tsx
+      ingress:
+        hostName: guardium.apps.gi.thinkforward.work
+        domainName: apps.gi.thinkforward.work
+```
+
 
 Also we will be setting the RWO storage classes to use the gp3 block storage class we created `ebs-gp3-sc`
 
@@ -386,6 +393,119 @@ gi-eksctqdrippjy9p2gqvvzwhyc-snif-picker-unix   nginx    unix-ctqdrippjy9p2gqvvz
 ```
 
 Since we installed everything into the `openshift-marketplace` namespace, we should see everything there.
+
+## Creating the QS tenant
+
+:::note[Important!]
+In the current release of GI, in order to create the Quantum Security tenant, you need to scale down all the unnecessary services that are spun up by default in Guardium Insights. Future GI revisions will allow for disabling these services in the CR.
+:::
+
+### Scale down services
+
+Our example GI instance cluster is called `gi-eks`. Let's export that as an env var.
+
+If you're unsure as to what your instance cluster is called, it can be found with the following command:
+
+```tsx
+kubectl get gi
+NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
+gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+```
+
+```tsx
+export cluster_name="gi-eks"
+```
+
+Now scale down the following deployments
+
+{/* ${cluster_name}-rm-risk-controller \ */}
+{/* ${cluster_name}-risk-analytics-controller \ */}
+{/* ${cluster_name}-ssh-service \ */}
+
+```tsx
+kubectl scale deploy \
+${cluster_name}-risk-analytics-engine \
+${cluster_name}-risk-analytics-ml-classification \
+${cluster_name}-rm-risk-engine \
+${cluster_name}-outliers-engine \
+${cluster_name}-analytics-events \
+${cluster_name}-assets \
+${cluster_name}-compliance-accelerator \
+${cluster_name}-pam-connector-thycotic \
+${cluster_name}-policy-builder \
+${cluster_name}-postgres-proxy \
+${cluster_name}-postgres-sentinel \
+${cluster_name}-rm-data-collector \
+${cluster_name}-snif-assist \
+${cluster_name}-streams \
+--replicas=0
+```
+
+### Create the tenant
+Retrieve the `cpadmin` password and set it as an env var
+
+```tsx
+export CPPASS=$(kubectl get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)
+```
+
+Create an auth header
+
+```tsx
+export AUTH=$(echo -ne "cpadmin:$CPPASS" | base64)
+```
+
+Create a JSON
+`payload.json`
+```json
+{
+  "async": false,
+  "external_id": "adv_gi41_qspm_allcom",
+  "name": "adv_gi41_qspm_allcom",
+  "part_number": "gi_dedicated_qspm",
+  "uid": "cpadmin"
+}
+
+```
+
+And now let's submit the request. Our API url is `https://guardium.apps.gi.thinkforward.work/api/v3/tenants`. This is the URL we set in the CR. 
+
+```tsx
+curl -k -X 'POST' \
+  'https://guardium.apps.gi.thinkforward.work/api/v3/tenants' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Basic $AUTH" \
+  -d '{
+  "async": false,
+  "external_id": "adv_gi41_qspm_allcom",
+  "name": "adv_gi41_qspm_allcom",
+  "part_number": "gi_dedicated_qspm",
+  "uid": "cpadmin"
+}'
+```
+
+When the tenant is created, the tenant id should be returned
+```tsx
+{"tenant_id":"TNT_ACCKEBT4ZIRQW9YRRKCRJH"}
+```
+
+### Verify the tenant creation
+
+We set the URL for Guardium Insights to `guardium.apps.gi.thinkforward.work` in our CR. Now open this in a browser.
+
+The console url should open. Login with `cpadmin` and the password you retrieved and set to `$CPPASS`
+
+![GuardiumLogin01](../../../assets/images/guardium_login01.png)
+
+Select the upper rightmost icon and select the QS tenant under `Account` dropdown. Then click the `IBM Guardium` logo in the upper left to open the console for the QS tenant.
+
+![GuardiumLogin02](../../../assets/images/guardium_login03.png)
+
+The console should open.
+
+![GuardiumLogin03](../../../assets/images/guardium_login04.png)
+
+
 {/*
 ### Stupid error tricks
 
