@@ -1145,7 +1145,11 @@ Updating the common-service-db CR to use a specific storage class
 
 ```tsx
 kubectl get csv | grep ibm
+```
 
+Output should look like this:
+
+```tsx
 ibm-cert-manager-operator.v4.2.7              IBM Cert Manager                       4.2.7                                        Succeeded
 ibm-common-service-operator.v4.6.2            IBM Cloud Pak foundational services    4.6.2                                        Succeeded
 ibm-commonui-operator.v4.4.1                  Ibm Common UI                          4.4.1                                        Succeeded
@@ -1158,7 +1162,11 @@ ibm-zen-operator.v5.1.4                       IBM Zen Service                   
 
 ```tsx
 kubectl get opreq
+```
 
+Output should look like this:
+
+```tsx
 NAME                          AGE   PHASE     CREATED AT
 common-service                97m   Running   2024-08-30T13:45:01Z
 ibm-iam-request               97m   Running   2024-08-30T13:45:29Z
@@ -1183,6 +1191,11 @@ Verify the policies have all been created
 
 ```tsx
 kubectl get netpol
+```
+
+Output should look like this:
+
+```tsx
 NAME                                     POD-SELECTOR                                     AGE
 access-to-audit-svc                      component=zen-audit                              86m
 access-to-common-web-ui                  k8s-app=common-web-ui                            87m
@@ -1228,7 +1241,12 @@ cat cpfs-ingress-template.yaml | sed 's#REPLACE_CLIENT_ID#'$client_id'#g' | sed 
 Verify the ingress creation
 
 ```tsx
-kubectl get ingress
+kubectl get ingres
+```
+
+Output should look like this:
+
+```tsx
 NAME                         CLASS   HOSTS                                                         ADDRESS   PORTS   AGE
 cncf-common-web-ui           nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s
 cncf-id-mgmt                 nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work             80      13s

@@ -143,6 +143,11 @@ Verify the Catalog Sources were installed
 
 ```tsx {4-6}
 kubectl get catsrc
+```
+
+Output should look like this:
+
+```tsx
 NAME                                     DISPLAY                                  TYPE   PUBLISHER   AGE
 cloud-native-postgresql-catalog          Cloud Native Postgresql Catalog          grpc   IBM         3d21h
 ibm-db2uoperator-catalog                 IBM Db2U Catalog                         grpc   IBM         3m18s
@@ -166,6 +171,11 @@ Verify the installation of the operators
 
 ```tsx {5,7,11}
 kubectl get sub
+```
+
+Output should look like this:
+
+```tsx
 NAME                                          PACKAGE                          SOURCE                                   CHANNEL
 cloud-native-postgresql                       cloud-native-postgresql          cloud-native-postgresql-catalog          stable
 ibm-common-service-operator                   ibm-common-service-operator      opencloud-operators                      v4.6
@@ -358,6 +368,11 @@ Check to make sure the Guardium Insights custom resource (CR) has been completel
 
 ```tsx {3}
 kubectl get gi
+```
+
+Output should look like this:
+
+```tsx
 NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
 gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
 ```
@@ -366,6 +381,11 @@ Check that the tenant has been created
 
 ```tsx {3}
 kubectl get tenantminisnif
+```
+
+Output should look like this:
+
+```tsx
 NAME                           TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
 gi-eksctqdrippjy9p2gqvvzwhyc   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
 ```
@@ -373,6 +393,11 @@ gi-eksctqdrippjy9p2gqvvzwhyc   Ready   True     Complete   Completed Reconciliat
 Verify all ingress paths have been created
 ```tsx {12-18}
 kubectl get ingress -n openshift-marketplace
+```
+
+Output should look like this:
+
+```tsx
 NAME                                            CLASS    HOSTS                                                          ADDRESS                                                                         PORTS     AGE
 cncf-common-web-ui                              nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
 cncf-id-mgmt                                    nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
@@ -408,6 +433,11 @@ If you're unsure as to what your instance cluster is called, it can be found wit
 
 ```tsx
 kubectl get gi
+```
+
+Output should look like this:
+
+```tsx
 NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
 gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
 ```
