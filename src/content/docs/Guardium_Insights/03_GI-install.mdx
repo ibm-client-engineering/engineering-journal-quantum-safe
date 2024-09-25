@@ -147,7 +147,7 @@ kubectl get catsrc
 
 Output should look like this:
 
-```tsx {2-4}
+```tsx {3-5}
 NAME                                     DISPLAY                                  TYPE   PUBLISHER   AGE
 cloud-native-postgresql-catalog          Cloud Native Postgresql Catalog          grpc   IBM         3d21h
 ibm-db2uoperator-catalog                 IBM Db2U Catalog                         grpc   IBM         3m18s
@@ -175,7 +175,7 @@ kubectl get sub
 
 Output should look like this:
 
-```tsx {3,5,9}
+```tsx {4,6,10}
 NAME                                          PACKAGE                          SOURCE                                   CHANNEL
 cloud-native-postgresql                       cloud-native-postgresql          cloud-native-postgresql-catalog          stable
 ibm-common-service-operator                   ibm-common-service-operator      opencloud-operators                      v4.6
@@ -397,7 +397,7 @@ kubectl get ingress -n openshift-marketplace
 
 Output should look like this:
 
-```tsx {10-16}
+```tsx {11-17}
 NAME                                            CLASS    HOSTS                                                          ADDRESS                                                                         PORTS     AGE
 cncf-common-web-ui                              nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
 cncf-id-mgmt                                    nginx    cp-console-openshift-marketplace.apps.gi.thinkforward.work     a904f47d90a8c4961ae389b155359368-aa0f265b8588c710.elb.us-east-1.amazonaws.com   80        5d22h
