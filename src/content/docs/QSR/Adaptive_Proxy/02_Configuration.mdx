@@ -188,6 +188,11 @@ Edit the following file `/opt/adaptive-proxy/workdir/adaptive.proxy.location.con
 
 By default, the best encryption Apache supports is TLSv1.2, so be sure to include 
 `proxy_ssl_protocols TLSv1.2` in the config as shown below.
+
+The docker container running Adaptive Proxy will resolve
+the host name in `proxy_pass` through the network DNS. It will not use the parent
+host `/etc/hosts` file to resolve that host name. So if that name can be pinged without
+the use of an /etc/hosts update, then it will work. Otherwise, use the IP address instead.
 :::
 
 ```nginx
@@ -287,3 +292,21 @@ dockerbot1 -> Square: "No-TLS\n"
 Square -> dockerbot1: "No-TLS\n"
 dockerbot1 -> Image: TLS
 ```
+
+## Troubleshooting
+
+### Adaptive Proxy docker container will not start
+
+Run `docker ps` to ensure that the AP container is up and running. If it's not check
+the local `logs` directory for `error.log`. There you will see any error messages from
+the docker container.
+
+If you see the following message, it means that from within the docker container, the
+host name of your site cannot be resolved.
+
+```
+[emerg] 1#1: host not found in upstream "quantum-site" in /etc/nginx/conf.d/adaptive.proxy.location.conf:18
+```
+
+To resolve, update `adaptive.proxy.location.conf` and replace the host name in `proxy_pass` to use
+the IP address of the site instead. Start AP again.
