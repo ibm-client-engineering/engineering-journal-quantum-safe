@@ -711,6 +711,11 @@ EOF
 
 ## Install NGINX Controller
 
+:::note[On Ingresses]
+
+If you plan on using AWS ALB for ingress, follow the directions [here](../04_optional_services/#optional-install-the-alb-ingress-controller)
+
+:::
 Let's install the NGINX helm chart
 ```tsx
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -909,6 +914,8 @@ chmod +x ibm-cert-manager.sh
 ./ibm-cert-manager.sh
 ```
 
+{/*If you need to limit the cert manager to a single namespace, edit the `ibm-cert-manager.sh` script.*/}
+
 Give it a few minutes and then verify the cert manager is up
 
 ```tsx
@@ -927,6 +934,10 @@ kubectl get csv -n ibm-cert-manager
 NAME                               DISPLAY            VERSION   REPLACES   PHASE
 ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succeeded
 ```
+
+:::note[Deploying with ACM]
+If you plan to use AWS ACM to manage your certs with an ALB ingress, follow the install instructions [here](../04_optional_services/#use-aws-ca-acm-for-certs-optional)
+:::
 
 ## Install Foundational Services
 
