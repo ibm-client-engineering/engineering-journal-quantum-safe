@@ -3,6 +3,17 @@ title: Installation
 description: QSR Adaptive Proxy installation
 ---
 
+:::note[Useful links]
+
+https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=proxy-installing-adaptive
+
+:::
+
+# Deployment Pattern (VM-based standalone)
+
+Starting with v1.0.1 there are 3 different deployment patterns; Standalone (VM), ingress controller (k8s), and
+post-ingress controller (k8s). This section is focused on the VM-based standalone deployment pattern.
+
 # Components
 
 - Adaptive Proxy
@@ -25,7 +36,7 @@ https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x?topic=pro
 
 :::note
 
-Make sure the following packages are installed
+For Fedora, make sure the following packages are installed for `cron`.
 
 ```tsx
 sudo dnf -y install cronie
@@ -74,24 +85,48 @@ Start up docker
 sudo systemctl start docker
 ```
 
+### Installing jq
+
+Install jq v1.7+
+```tsx
+sudo dnf -y install jq
+```
+
+### Installing Java
+
+Install [sdkman](https://sdkman.io/install/)
+```tsx
+curl -s "https://get.sdkman.io" | sudo bash
+```
+
+Login as root to source the environment
+```tsx
+sudo su -
+```
+
+Install Java 21 (as root)
+```tsx
+sdk install java 21.0.2-open
+```
+
 ### Installing the proxy
 
 Download the Adaptive Proxy from [IBM Passport Advantage](https://www.ibm.com/software/passportadvantage/pao_customer.html). If you are an IBM employee you can download internally [here](https://w3south-limited-use.cpc.ibm.com/software/xl/download/ticket.wss).
 Search for `IBM Quantum Safe Remediator Adaptive Proxy`.
 
-Once downloaded, the file should be named `IQSRAP_1.0_Linux_EN.zip`
+Once downloaded, the file should be named `IQSRAP_<version>_Linux_EN.zip`
 
 Extract to your gateway host
 ```tsx
-[kramerro@eksa-admin ~]$ unzip IQSRAP_1.0_Linux_EN.zip
-Archive:  IQSRAP_1.0_Linux_EN.zip
-  inflating: M0J90EN/adaptiveproxy_1.0.0.tar
+[kramerro@eksa-admin ~]$ unzip IQSRAP_<version>_Linux_EN.zip
+Archive:  IQSRAP_<version>_Linux_EN.zip
+  inflating: M0J90EN/adaptiveproxy_<version>.tar
 ```
 
 Make the adaptive proxy directory in `/opt` and extract the tar file there
 
 ```tsx
-sudo tar xvf M0J90EN/adaptiveproxy_1.0.0.tar -C /opt/adaptive-proxy
+sudo tar xvf M0J90EN/adaptiveproxy_<version>.tar -C /opt/adaptive-proxy
 ```
 
 Now run the installer script
@@ -99,12 +134,10 @@ Now run the installer script
 ```tsx
 cd /opt/adaptive-proxy/workdir
 
-sudo ./installAdaptiveProxy.sh
+sudo ./install.sh
 ```
 
 Accept the license agreement and allow the installation to continue
-
-For now, our default proxy server will be `localhost`. So hit enter when prompted for it.
 
 For all the algorithms, just hit enter to accept the defaults.
 
@@ -144,12 +177,12 @@ ll certificates/leaf
 Finally verify the images are available
 
 ```tsx
-docker images
-REPOSITORY       TAG          IMAGE ID       CREATED       SIZE
-adaptive-proxy   ubi-9.3      99c3cd5ad80f   5 weeks ago   277MB
-adaptive-proxy   qscopenssl   6609ea524cdf   5 weeks ago   282MB
+$ docker images
+REPOSITORY                                                  TAG       IMAGE ID       CREATED         SIZE
+de.icr.io/qs-remediator/adaptive-proxy-provider-ubi-micro   1.0.1     1f345e88fb04   2 weeks ago     530MB
+de.icr.io/qs-remediator/qsc-openssl-provider                1.0.1     f3fe42d98d81   3 months ago    284MB
+hello-world                                                 latest    d2c94e258dcb   17 months ago   13.3kB
 ```
-
 
 The Adaptive Proxy supports two patterns of TLS handling:
 
