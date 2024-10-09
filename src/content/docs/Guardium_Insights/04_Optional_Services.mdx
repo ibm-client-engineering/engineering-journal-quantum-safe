@@ -16,19 +16,21 @@ export NAMESPACE=openshift-marketplace
 
 ## (Optional) Install the ALB ingress controller
 
+Unlike NGINX Ingress, ALB generates a load balancer when a external service is created in the cluster. So DNS is not necessary. See example [here](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html#application-load-balancer-sample-application).
+
 Download an IAM policy for the AWS Load Balancer Controller that allows it to make calls to AWS APIs on your behalf.
 
 :::info 
 
-As of this writing, the latest version of AWS Load Balancer Controller is [v2.8.3](https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/tag/v2.8.3)
+As of this writing, the latest version of AWS Load Balancer Controller is [v2.9.0](https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/tag/v2.9.0)
 
 :::
 
 ```tsx
-curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.8.3/docs/install/iam_policy.json
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.9.0/docs/install/iam_policy.json
 ```
 
-Create an IAM policy using the policy downloaded in the previous step.
+Create an IAM policy using the policy downloaded in the previous step. 
 
 ```tsx
 aws iam create-policy \
@@ -69,6 +71,11 @@ Let’s export that policy arn as another env var
 export alb_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`AWSLoadBalancerControllerIAMPolicy`].Arn' --output text)
 ```
 
+Export the role name as a env var. We're going to append the cluster name to the role name to help identify it in AWS and in case we have multiple clusters in the same account.
+```tsx
+export alb_role_name=AWSLoadBalancerControllerRole-${clustername}
+```
+
 Create a Kubernetes service account named aws-load-balancer-controller in the kube-system namespace for the AWS Load Balancer Controller and annotate the Kubernetes service account with the name of the IAM role.
 
 ```tsx
@@ -76,7 +83,7 @@ eksctl create iamserviceaccount \
     --cluster ${clustername} \
     --namespace kube-system \
     --name aws-load-balancer-controller \
-    --role-name AWSLoadBalancerControllerRole \
+    --role-name ${alb_role_name} \
     --attach-policy-arn ${alb_policy_arn} \
     --tags "Product=Guardium" \
     --approve \
@@ -85,6 +92,15 @@ eksctl create iamserviceaccount \
 ```
 
 Now let's use helm to install the AWS Load Balancer Controller
+
+Install the helm repo
+
+```tsx
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+```
+
+Now install the ALB controller
 
 ```tsx
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
