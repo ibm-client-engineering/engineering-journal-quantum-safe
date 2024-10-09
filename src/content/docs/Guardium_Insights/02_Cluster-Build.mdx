@@ -32,7 +32,12 @@ As of this writing, GI v3.4.0 does not support multiple availability zones.
 
 ## Creating the cluster
 
-Let's set some env vars to make our lives easier
+Let's set some env vars to make our lives easier. 
+:::note[On cluster names]
+
+We're deploying in `us-east-1` and we are naming our cluster `gi-east`. This name will be exclusive to this cluster, so `gi-east` is an example here. You aren't bound to using `gi-east` as your name.
+
+:::
 
 ```bash
 export clustername=gi-east
@@ -42,7 +47,7 @@ export region=us-east-1
 ```tsx
 eksctl create cluster \
 --name ${clustername} \
---version 1.30 \
+--version 1.31 \
 --region ${region} \
 --zones ${region}a,${region}b \
 --nodegroup-name guardium-workers \
@@ -106,13 +111,6 @@ Should return something like this
 ```
 */}
 
-## Install the EKS helm repo
-
-```tsx
-helm repo add eks https://aws.github.io/eks-charts
-helm repo update
-```
-
 ## Install the EBS driver to the cluster
 
 We install the EBS CSI driver as this gives us access to GP3 block storage.
@@ -164,6 +162,12 @@ Let's export the returned arn as a env VAR for further use
 export ebs_driver_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`AmazonEKS_EBS_CSI_Driver_Policy`].Arn' --output text)
 ```
 
+Now let's export the rolename we are going to create as a env var. We're going to append the cluster name to the role to differentiate in case we have multiple clusters in this account. You can share policies, but you cannot share roles.
+
+```tsx
+export ebs_driver_role_name=AmazonEKS_EBS_CSI_DriverRole-${clustername}
+```
+
 Create the service account
 ```tsx
 eksctl create iamserviceaccount \
@@ -175,12 +179,12 @@ eksctl create iamserviceaccount \
   --region=${region} \
   --tags "Product=Guardium" \
   --role-only \
-  --role-name AmazonEKS_EBS_CSI_DriverRole
+  --role-name ${ebs_driver_role_name}
 ```
 
-Let's export that role arn as another env var
+Let's export the created role arn as another env var
 ```tsx
-export ebs_driver_role_arn=$(aws iam list-roles --query 'Roles[?RoleName==`AmazonEKS_EBS_CSI_DriverRole`].Arn' --output text)
+export ebs_driver_role_arn=$(aws iam list-roles --query 'Roles[?RoleName==`AmazonEKS_EBS_CSI_DriverRole-'$clustername'`].Arn' --output text)
 ```
 
 Create the addon for the cluster
@@ -340,6 +344,12 @@ export efs_driver_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyNa
 ```
 ### Create IAM role
 
+Now let’s export the rolename we are going to create as a env var. We’re going to append the cluster name to the role to differentiate in case we have multiple clusters in this account. You can share policies, but you cannot share roles.
+
+```tsx
+export efs_driver_role_name=AmazonEKS_EFS_CSI_DriverRole-${clustername}
+```
+
 Create an IAM role and attach the IAM policy to it. Annotate the Kubernetes service account with the IAM role ARN and the IAM role with the Kubernetes service account name. 
 
 ```tsx
@@ -347,7 +357,7 @@ eksctl create iamserviceaccount \
     --cluster ${clustername} \
     --namespace kube-system \
     --name efs-csi-controller-sa \
-    --role-name AmazonEKS_EFS_CSI_DriverRole \
+    --role-name ${efs_driver_role_name} \
     --attach-policy-arn $efs_driver_policy_arn \
     --tags "Product=Guardium" \
     --approve \
