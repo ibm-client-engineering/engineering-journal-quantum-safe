@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- allowedrepos
+- automount-serviceaccount-token
+- block-endpoint-edit-default-role
+- block-loadbalancer-services
+- block-nodeport-services
+- block-wildcard-ingress
+- containerlimits
+- containerrequests
+- containerresources
+- disallowanonymous
+- disallowedrepos
+- disallowedtags
+- disallowinteractive
+- externalip
+- httpsonly
+- imagedigests
+- poddisruptionbudget
+- requiredannotations
+- requiredlabels
+- uniqueingresshost
