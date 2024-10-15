@@ -16,14 +16,14 @@ You will need your IBM Entitlement Key for the next steps. You should already ha
 
 Export the following env vars. This assumes we have been installing in the `openshift-marketplace` namespace.
 
-As of this writing, we are using Guardium Insights version `3.4.0` which uses the `2.4.0` bundle file.
+As of this writing, we are using Guardium Insights version `3.5.0` which uses the `2.5.0` bundle file.
 
 ```tsx
 export CP_REPO_USER="cp"
 export CP_REPO_PASS=<Your Password / Entitlement Key to cp.icr.io>
 export NAMESPACE="openshift-marketplace"
 export CASE_NAME=ibm-guardium-insights
-export CASE_VERSION=2.4.0
+export CASE_VERSION=2.5.0
 export LOCAL_CASE_DIR=$HOME/.ibm-pak/data/cases/$CASE_NAME/$CASE_VERSION
 export GI_INVENTORY_SETUP=install
 export IBMPAK_LAUNCH_SKIP_PREREQ_CHECK=true
@@ -37,7 +37,7 @@ oc ibm-pak get $CASE_NAME \
 --skip-verify
 ```
 
-This will download the CASE bundle to `$HOME/.ibm-pak/data/cases/ibm-guardium-insights/2.4.0`
+This will download the CASE bundle to `$HOME/.ibm-pak/data/cases/ibm-guardium-insights/2.5.0`
 
 ## Install the GI Operator
 

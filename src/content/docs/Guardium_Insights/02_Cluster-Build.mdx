@@ -111,219 +111,11 @@ Should return something like this
 ```
 */}
 
-## Configure Security Constraints (Optional)
+:::note[Deploying Optional OPA Security Constraints]
 
-For some environments there might be security constraints applied to the EKS cluster. Follow
-these instructions to apply security constraints using OPA gatekeeper.
+If you plan to use the Gatekeeper OPA on your cluster, follow the instructions [here](../04_optional_services/#configure-security-constraints-optional)
 
-If the operating environment is a production or pre-production enterprise environment, then
-you can skip this section as it's meant for development environments.
-
-### Install OPA Gatekeeper
-
-Deploy OPA Gatekeeper using prebuilt docker images
-
-```tsx
-kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.17/deploy/gatekeeper.yaml
-```
-
-Check the pods in gatekeeper-system namespace
-
-```tsx
-kubectl get pods -n gatekeeper-system
-```
-
-The output will be similar to:
-
-```tsx
-NAME                                             READY   STATUS    RESTARTS   AGE
-gatekeeper-audit-5bc9b59c57-9d9hc                1/1     Running   0          25s
-gatekeeper-controller-manager-744cdc8556-hxf2n   1/1     Running   0          25s
-gatekeeper-controller-manager-744cdc8556-jn42m   1/1     Running   0          25s
-gatekeeper-controller-manager-744cdc8556-wwrb6   1/1     Running   0          25s
-```
-
-### Install kustomize
-To ease in the deployment of the templates and constraints, install [kustomize](https://kubectl.docs.kubernetes.io/installation/kustomize/).
-
-The following script detects your OS and downloads the appropriate kustomize binary to your current working directory.
-
-```tsx
-curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-```
-
-### Apply Templates
-
-There are 2 parts to OPA gatekeeper policy enforcment, the first part is the `ConstraintTemplate`.
-This is where the logic of the policy exists. The templates must be deployed prior to deploying the 
-constraints.
-
-If you haven't yet, clone this github repository.
-
-```
-git clone https://github.com/ibm-client-engineering/engineering-journal-quantum-safe.git
-```
-
-Go to the opa library templates directory.
-
-```
-cd engineering-journal-quantum-safe/opa/library/templates
-```
-
-Apply the templates using `kustomize`
-
-```
-kustomize build . | kubectl apply -f -
-```
-
-Sample output
-
-```
-constrainttemplate.templates.gatekeeper.sh/k8sallowedrepos created
-constrainttemplate.templates.gatekeeper.sh/k8sblockendpointeditdefaultrole created
-constrainttemplate.templates.gatekeeper.sh/k8sblockloadbalancer created
-constrainttemplate.templates.gatekeeper.sh/k8sblocknodeport created
-constrainttemplate.templates.gatekeeper.sh/k8sblockwildcardingress created
-constrainttemplate.templates.gatekeeper.sh/k8sdisallowanonymous created
-constrainttemplate.templates.gatekeeper.sh/k8sdisallowedrepos created
-constrainttemplate.templates.gatekeeper.sh/k8sdisallowedtags created
-constrainttemplate.templates.gatekeeper.sh/k8sdisallowinteractivetty created
-constrainttemplate.templates.gatekeeper.sh/k8sexternalips created
-constrainttemplate.templates.gatekeeper.sh/k8shttpsonly created
-constrainttemplate.templates.gatekeeper.sh/k8simagedigests created
-constrainttemplate.templates.gatekeeper.sh/k8spoddisruptionbudget created
-constrainttemplate.templates.gatekeeper.sh/k8spspautomountserviceaccounttokenpod created
-constrainttemplate.templates.gatekeeper.sh/k8srequiredresources created
-constrainttemplate.templates.gatekeeper.sh/k8sstorageclass created
-constrainttemplate.templates.gatekeeper.sh/k8suniqueingresshost created
-constrainttemplate.templates.gatekeeper.sh/k8suniqueserviceselector created
-```
-
-### Apply Constraints
-
-The 2nd part to OPA gatekeeper policy enforcment is the `Constraint`. The constraints
-are a specific application of a template. This instructs the OPA gatekeeper to constrain
-a resource according to specific parameters and applying one of the templates. For example,
-a constraint can specify that every namespace must have a specific label applied.
-
-Part of a constraint definition is the enforcement action. By default, OPA gatekeeper will enforce
-constraints by denying the action. For the constraints here, we are using `dryrun`, which
-does not deny the resources that violate constraints, but rather just logs the violation. This
-allows us to see what resources are violating the constraints without the resources being denied.
-
-Go to the opa library constraints directory.
-
-```
-cd engineering-journal-quantum-safe/opa/library/constraints
-```
-
-Apply the templates using `kustomize`
-
-```
-kustomize build . | kubectl apply -f -
-```
-
-Sample output
-
-```
-k8sallowedrepos.constraints.gatekeeper.sh/repo-is-amazonaws created
-k8sallowedrepos.constraints.gatekeeper.sh/repo-is-openpolicyagent created
-k8sblockendpointeditdefaultrole.constraints.gatekeeper.sh/block-endpoint-edit-default-role created
-k8sblockloadbalancer.constraints.gatekeeper.sh/block-load-balancer created
-k8sblocknodeport.constraints.gatekeeper.sh/block-node-port created
-k8sblockwildcardingress.constraints.gatekeeper.sh/block-wildcard-ingress created
-k8sdisallowanonymous.constraints.gatekeeper.sh/no-anonymous-no-authenticated created
-k8sdisallowinteractivetty.constraints.gatekeeper.sh/no-interactive-tty-containers created
-k8sdisallowedrepos.constraints.gatekeeper.sh/repo-must-not-be-k8s-gcr-io created
-k8sdisallowedtags.constraints.gatekeeper.sh/container-image-must-not-have-latest-tag created
-k8sexternalips.constraints.gatekeeper.sh/external-ips created
-k8shttpsonly.constraints.gatekeeper.sh/ingress-https-only created
-k8simagedigests.constraints.gatekeeper.sh/container-image-must-have-digest created
-k8spspautomountserviceaccounttokenpod.constraints.gatekeeper.sh/psp-automount-serviceaccount-token-pod created
-k8spoddisruptionbudget.constraints.gatekeeper.sh/pod-distruption-budget created
-k8srequiredresources.constraints.gatekeeper.sh/container-must-have-limits-and-requests created
-k8suniqueingresshost.constraints.gatekeeper.sh/unique-ingress-host created
-```
-
-
-### List Violations
-
-Use the following command to list the violations.
-
-```
-kubectl get constraints
-```
-
-Sample output
-
-```
-NAME                                                                                     ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8srequiredresources.constraints.gatekeeper.sh/container-must-have-limits-and-requests   dryrun               4
-
-NAME                                                                 ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8suniqueingresshost.constraints.gatekeeper.sh/unique-ingress-host   dryrun               0
-
-NAME                                                                                ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8sdisallowinteractivetty.constraints.gatekeeper.sh/no-interactive-tty-containers   dryrun               0
-
-NAME                                                        ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8shttpsonly.constraints.gatekeeper.sh/ingress-https-only   dryrun               0
-
-NAME                                                                                         ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8sblockendpointeditdefaultrole.constraints.gatekeeper.sh/block-endpoint-edit-default-role   dryrun               0
-
-NAME                                                                       ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8sdisallowedrepos.constraints.gatekeeper.sh/repo-must-not-be-k8s-gcr-io   dryrun               0
-
-NAME                                                                                   ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8sdisallowedtags.constraints.gatekeeper.sh/container-image-must-not-have-latest-tag   dryrun               0
-
-NAME                                                         ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
-k8sblocknodeport.constraints.gatekeeper.sh/block-node-port   dryrun               0
-```
-
-### Violation Details
-
-To see the details of the violations, you can look at the constraint yaml. For example, to see the 
-`container-must-have-limits-and-requests` constraint violations, run the following command.
-
-```
-kubectl get k8srequiredresources container-must-have-limits-and-requests -o yaml
-```
-
-Near the end of the yaml output, you will see violations listed.
-
-```yaml
-  violations:
-  - enforcementAction: dryrun
-    group: ""
-    kind: Pod
-    message: container <manager> does not have <{"cpu"}> limits defined
-    name: gatekeeper-controller-manager-865cc64485-kgkkj
-    namespace: gatekeeper-system
-    version: v1
-  - enforcementAction: dryrun
-    group: ""
-    kind: Pod
-    message: container <manager> does not have <{"cpu"}> limits defined
-    name: gatekeeper-controller-manager-865cc64485-h2x7d
-    namespace: gatekeeper-system
-    version: v1
-  - enforcementAction: dryrun
-    group: ""
-    kind: Pod
-    message: container <manager> does not have <{"cpu"}> limits defined
-    name: gatekeeper-controller-manager-865cc64485-g4b72
-    namespace: gatekeeper-system
-    version: v1
-  - enforcementAction: dryrun
-    group: ""
-    kind: Pod
-    message: container <manager> does not have <{"cpu"}> limits defined
-    name: gatekeeper-audit-c794d5f69-s2nmd
-    namespace: gatekeeper-system
-    version: v1
-```
+:::
 
 ## Install the EBS driver to the cluster
 
@@ -967,6 +759,12 @@ Create the namespace for NGINX
 kubectl create ns ingress-nginx
 ```
 
+Export our relevant subnet ids to a comma delimited env variable
+
+```tsx
+export subnets=$(aws eks describe-cluster --name ${clustername} --region ${region} --query "cluster.resourcesVpcConfig.subnetIds" --output json | jq -r 'join(",")' | sed s/,/\\\\,/g)
+```
+
 Now install the helm chart for nginx
 
 {/*--set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-subnets'="$subnets" \ */}
@@ -1105,6 +903,42 @@ kubectl get csv -n olm | grep packageserver
 
 ```tsx[OUTPUT]
 packageserver   Package Server   0.28.0               Succeeded
+```
+
+Set the OLM global namespade to use openshift-marketplace
+
+```tsx
+oc set env deploy/catalog-operator GLOBAL_CATALOG_NAMESPACE=openshift-marketplace -n olm
+```
+
+We further require to change the global namespace for the packageserver as well. To do so, run the following command:
+
+```tsx
+kubectl patch csv packageserver -n olm --type='json' -p='[
+  {
+    "op": "replace",
+    "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/command/5",
+    "value": "openshift-marketplace"
+  }
+]'
+```
+
+Verify the global-namespace has been set
+
+```tsx
+kubectl get deploy packageserver -n olm -o yaml | grep -A 6 "command:"
+```
+
+Should return
+
+```tsx {7}
+      - command:
+        - /bin/package-server
+        - -v=4
+        - --secure-port
+        - "5443"
+        - --global-namespace
+        - openshift-marketplace
 ```
 
 ## Create the required Namespace
@@ -1423,10 +1257,16 @@ oc ibm-pak launch $CASE_NAME \
    --version $CASE_VERSION \
    --action install-catalog \
    --inventory $ICS_INVENTORY_SETUP \
-   --namespace openshift-marketplace \
+   --namespace $NAMESPACE \
    --args "--registry icr.io --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
+{/*
+Let's patch the commonservices cr to accept the license
 
+```tsx
+kubectl patch commonservices common-service --type merge -p '{"spec":{"license":{"accept":true}}}'
+```
+*/}
 Now run the following `ibm-pak` command to install the Foundational Services operators
 
 ```tsx
