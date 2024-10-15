@@ -111,6 +111,220 @@ Should return something like this
 ```
 */}
 
+## Configure Security Constraints (Optional)
+
+For some environments there might be security constraints applied to the EKS cluster. Follow
+these instructions to apply security constraints using OPA gatekeeper.
+
+If the operating environment is a production or pre-production enterprise environment, then
+you can skip this section as it's meant for development environments.
+
+### Install OPA Gatekeeper
+
+Deploy OPA Gatekeeper using prebuilt docker images
+
+```tsx
+kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.17/deploy/gatekeeper.yaml
+```
+
+Check the pods in gatekeeper-system namespace
+
+```tsx
+kubectl get pods -n gatekeeper-system
+```
+
+The output will be similar to:
+
+```tsx
+NAME                                             READY   STATUS    RESTARTS   AGE
+gatekeeper-audit-5bc9b59c57-9d9hc                1/1     Running   0          25s
+gatekeeper-controller-manager-744cdc8556-hxf2n   1/1     Running   0          25s
+gatekeeper-controller-manager-744cdc8556-jn42m   1/1     Running   0          25s
+gatekeeper-controller-manager-744cdc8556-wwrb6   1/1     Running   0          25s
+```
+
+### Install kustomize
+To ease in the deployment of the templates and constraints, install [kustomize](https://kubectl.docs.kubernetes.io/installation/kustomize/).
+
+The following script detects your OS and downloads the appropriate kustomize binary to your current working directory.
+
+```tsx
+curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+```
+
+### Apply Templates
+
+There are 2 parts to OPA gatekeeper policy enforcment, the first part is the `ConstraintTemplate`.
+This is where the logic of the policy exists. The templates must be deployed prior to deploying the 
+constraints.
+
+If you haven't yet, clone this github repository.
+
+```
+git clone https://github.com/ibm-client-engineering/engineering-journal-quantum-safe.git
+```
+
+Go to the opa library templates directory.
+
+```
+cd engineering-journal-quantum-safe/opa/library/templates
+```
+
+Apply the templates using `kustomize`
+
+```
+kustomize build . | kubectl apply -f -
+```
+
+Sample output
+
+```
+constrainttemplate.templates.gatekeeper.sh/k8sallowedrepos created
+constrainttemplate.templates.gatekeeper.sh/k8sblockendpointeditdefaultrole created
+constrainttemplate.templates.gatekeeper.sh/k8sblockloadbalancer created
+constrainttemplate.templates.gatekeeper.sh/k8sblocknodeport created
+constrainttemplate.templates.gatekeeper.sh/k8sblockwildcardingress created
+constrainttemplate.templates.gatekeeper.sh/k8sdisallowanonymous created
+constrainttemplate.templates.gatekeeper.sh/k8sdisallowedrepos created
+constrainttemplate.templates.gatekeeper.sh/k8sdisallowedtags created
+constrainttemplate.templates.gatekeeper.sh/k8sdisallowinteractivetty created
+constrainttemplate.templates.gatekeeper.sh/k8sexternalips created
+constrainttemplate.templates.gatekeeper.sh/k8shttpsonly created
+constrainttemplate.templates.gatekeeper.sh/k8simagedigests created
+constrainttemplate.templates.gatekeeper.sh/k8spoddisruptionbudget created
+constrainttemplate.templates.gatekeeper.sh/k8spspautomountserviceaccounttokenpod created
+constrainttemplate.templates.gatekeeper.sh/k8srequiredresources created
+constrainttemplate.templates.gatekeeper.sh/k8sstorageclass created
+constrainttemplate.templates.gatekeeper.sh/k8suniqueingresshost created
+constrainttemplate.templates.gatekeeper.sh/k8suniqueserviceselector created
+```
+
+### Apply Constraints
+
+The 2nd part to OPA gatekeeper policy enforcment is the `Constraint`. The constraints
+are a specific application of a template. This instructs the OPA gatekeeper to constrain
+a resource according to specific parameters and applying one of the templates. For example,
+a constraint can specify that every namespace must have a specific label applied.
+
+Part of a constraint definition is the enforcement action. By default, OPA gatekeeper will enforce
+constraints by denying the action. For the constraints here, we are using `dryrun`, which
+does not deny the resources that violate constraints, but rather just logs the violation. This
+allows us to see what resources are violating the constraints without the resources being denied.
+
+Go to the opa library constraints directory.
+
+```
+cd engineering-journal-quantum-safe/opa/library/constraints
+```
+
+Apply the templates using `kustomize`
+
+```
+kustomize build . | kubectl apply -f -
+```
+
+Sample output
+
+```
+k8sallowedrepos.constraints.gatekeeper.sh/repo-is-amazonaws created
+k8sallowedrepos.constraints.gatekeeper.sh/repo-is-openpolicyagent created
+k8sblockendpointeditdefaultrole.constraints.gatekeeper.sh/block-endpoint-edit-default-role created
+k8sblockloadbalancer.constraints.gatekeeper.sh/block-load-balancer created
+k8sblocknodeport.constraints.gatekeeper.sh/block-node-port created
+k8sblockwildcardingress.constraints.gatekeeper.sh/block-wildcard-ingress created
+k8sdisallowanonymous.constraints.gatekeeper.sh/no-anonymous-no-authenticated created
+k8sdisallowinteractivetty.constraints.gatekeeper.sh/no-interactive-tty-containers created
+k8sdisallowedrepos.constraints.gatekeeper.sh/repo-must-not-be-k8s-gcr-io created
+k8sdisallowedtags.constraints.gatekeeper.sh/container-image-must-not-have-latest-tag created
+k8sexternalips.constraints.gatekeeper.sh/external-ips created
+k8shttpsonly.constraints.gatekeeper.sh/ingress-https-only created
+k8simagedigests.constraints.gatekeeper.sh/container-image-must-have-digest created
+k8spspautomountserviceaccounttokenpod.constraints.gatekeeper.sh/psp-automount-serviceaccount-token-pod created
+k8spoddisruptionbudget.constraints.gatekeeper.sh/pod-distruption-budget created
+k8srequiredresources.constraints.gatekeeper.sh/container-must-have-limits-and-requests created
+k8suniqueingresshost.constraints.gatekeeper.sh/unique-ingress-host created
+```
+
+
+### List Violations
+
+Use the following command to list the violations.
+
+```
+kubectl get constraints
+```
+
+Sample output
+
+```
+NAME                                                                                     ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8srequiredresources.constraints.gatekeeper.sh/container-must-have-limits-and-requests   dryrun               4
+
+NAME                                                                 ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8suniqueingresshost.constraints.gatekeeper.sh/unique-ingress-host   dryrun               0
+
+NAME                                                                                ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8sdisallowinteractivetty.constraints.gatekeeper.sh/no-interactive-tty-containers   dryrun               0
+
+NAME                                                        ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8shttpsonly.constraints.gatekeeper.sh/ingress-https-only   dryrun               0
+
+NAME                                                                                         ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8sblockendpointeditdefaultrole.constraints.gatekeeper.sh/block-endpoint-edit-default-role   dryrun               0
+
+NAME                                                                       ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8sdisallowedrepos.constraints.gatekeeper.sh/repo-must-not-be-k8s-gcr-io   dryrun               0
+
+NAME                                                                                   ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8sdisallowedtags.constraints.gatekeeper.sh/container-image-must-not-have-latest-tag   dryrun               0
+
+NAME                                                         ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+k8sblocknodeport.constraints.gatekeeper.sh/block-node-port   dryrun               0
+```
+
+### Violation Details
+
+To see the details of the violations, you can look at the constraint yaml. For example, to see the 
+`container-must-have-limits-and-requests` constraint violations, run the following command.
+
+```
+kubectl get k8srequiredresources container-must-have-limits-and-requests -o yaml
+```
+
+Near the end of the yaml output, you will see violations listed.
+
+```yaml
+  violations:
+  - enforcementAction: dryrun
+    group: ""
+    kind: Pod
+    message: container <manager> does not have <{"cpu"}> limits defined
+    name: gatekeeper-controller-manager-865cc64485-kgkkj
+    namespace: gatekeeper-system
+    version: v1
+  - enforcementAction: dryrun
+    group: ""
+    kind: Pod
+    message: container <manager> does not have <{"cpu"}> limits defined
+    name: gatekeeper-controller-manager-865cc64485-h2x7d
+    namespace: gatekeeper-system
+    version: v1
+  - enforcementAction: dryrun
+    group: ""
+    kind: Pod
+    message: container <manager> does not have <{"cpu"}> limits defined
+    name: gatekeeper-controller-manager-865cc64485-g4b72
+    namespace: gatekeeper-system
+    version: v1
+  - enforcementAction: dryrun
+    group: ""
+    kind: Pod
+    message: container <manager> does not have <{"cpu"}> limits defined
+    name: gatekeeper-audit-c794d5f69-s2nmd
+    namespace: gatekeeper-system
+    version: v1
+```
+
 ## Install the EBS driver to the cluster
 
 We install the EBS CSI driver as this gives us access to GP3 block storage.
@@ -930,6 +1144,9 @@ Give it a few minutes and then verify the cert manager is up
 
 ```tsx
 kubectl get po -n ibm-cert-manager
+```
+
+```tsx
 NAME                                                              READY   STATUS      RESTARTS   AGE
 cd6e1c2b84458a4f431f49f499a919d28af0b23693e36f2fc53bc1f2c3hw5pw   0/1     Completed   0          2m1s
 cert-manager-cainjector-85777f77cc-hbzg7                          1/1     Running     0          102s
@@ -941,6 +1158,8 @@ ibm-cert-manager-operator-64fc5b4644-rnpqg                        1/1     Runnin
 
 ```tsx
 kubectl get csv -n ibm-cert-manager
+```
+```
 NAME                               DISPLAY            VERSION   REPLACES   PHASE
 ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succeeded
 ```
@@ -948,6 +1167,55 @@ ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succe
 :::note[Deploying with ACM]
 If you plan to use AWS ACM to manage your certs with an ALB ingress, follow the install instructions [here](../04_optional_services/#use-aws-ca-acm-for-certs-optional)
 :::
+
+## Configure DNS resolution (Optional)
+
+If you are following the instrutions in this guide using the "insecure" hostname sections to avoid
+registering domains, it's possible to use Route 53 in AWS set up explicit DNS resolution for the
+specific host routes needed.
+
+Go to [AWS Route 53](https://console.aws.amazon.com/route53/) and click `Hosted zones` heading.
+Then click the `Create hosted zone` button. This will open the hosted zone form.
+
+For the domain use
+
+```
+apps.gi.guardium-insights.com
+```
+
+For type, select `Private hosted zone`
+
+![image](https://media.github.ibm.com/user/207188/files/764833c5-2f7e-4f0c-8415-aed7390c465e)
+
+For the VPCs to associate with the hosted zone, select the proper region, then select the VPC that was created for your cluster.
+
+![image](https://media.github.ibm.com/user/207188/files/27cbf581-9648-449d-952d-9eea350785ee)
+
+Then click `Create Hosted zone` button to create the hosted zone.
+
+This will take you to the hosted zone details page. Now it's time to create some records for DNS resolution.
+But first we need the values to use for the internal routing.
+
+Find the private cluster IP address of the load balancer under `CLUSTER-IP`.
+
+```tsx
+kubectl get service --namespace ingress-nginx ingress-nginx-controller
+```
+```tsx
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP                                                                     PORT(S)                      AGE
+ingress-nginx-controller   LoadBalancer   10.100.24.243   a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com   80:31369/TCP,443:30370/TCP   20h
+```
+
+Capture that `CLUSTER-IP` value for the next steps.
+
+Back on the hosted zone details page, click the `Create record` button.
+
+We want to create a record that routes `cp-console-openshift-marketplace.apps.gi.guardium-insights.com` to
+the private IP address captured above.
+
+![image](https://media.github.ibm.com/user/207188/files/fbb0bb48-1795-4fbb-af74-c068ecb562b2)
+
+Click `Create Records`.
 
 ## Install Foundational Services
 
@@ -1044,6 +1312,14 @@ Export the hostname as an env var. It's important to note that your domain must 
 export HOSTNAME=apps.gi.thinkforward.work
 ```
 
+:::note[Using an insecure hostname]
+For development purposes only, you can avoid registering a domain name and setting up certificates
+by using your local `hosts` file to redirect traffic later in this guide. If taking this route, you can use the following:
+
+```tsx
+export HOSTNAME=apps.gi.guardium-insights.com
+```
+:::
 {/*
 :::note[On Storageclasses]
 
@@ -1299,21 +1575,32 @@ export REPLACE_NAMESPACE=openshift-marketplace
 export HOSTNAME=apps.gi.thinkforward.work
 ```
 
+:::note[Using an insecure hostname]
+For development purposes only, you can avoid registering a domain name and setting up certificates
+by using your local `hosts` file to redirect traffic later in this guide. If taking this route, you can use the following:
+
+```tsx
+export REPLACE_NAMESPACE=openshift-marketplace
+export HOSTNAME=apps.gi.guardium-insights.com
+```
+:::
+
+
 Run the Configmap creation with the following commands
 
 ```tsx
 while [[ $(kubectl get secret platform-oidc-credentials -ojsonpath='{.data.WLP_CLIENT_SECRET}' | base64 -d | wc -c) -eq 0 ]] ; do echo Waiting 30 seconds for platform-oidc-credentials to be created with the correct content; sleep 30; done
-client_id="$(kubectl get secret platform-oidc-credentials -o yaml |grep 'WLP_CLIENT_ID:' | sed 's/WLP_CLIENT_ID: * //')"
+client_id="$(kubectl get secret platform-oidc-credentials -o yaml |grep 'WLP_CLIENT_ID:' | sed 's/WLP_CLIENT_ID: * //' | awk '{print $1}')"
 client_id=`echo $client_id|base64 --decode`
 echo $client_id
 
 cat cpfs-ingress-template.yaml | sed 's#REPLACE_CLIENT_ID#'$client_id'#g' | sed 's#REPLACE_NAMESPACE#'$NAMESPACE'#g' | sed 's#REPLACE_HOSTNAME#'$HOSTNAME'#g' | kubectl apply -f -
 ```
+*/}
 
 Verify the ingress creation
-*/}
 ```tsx
-kubectl get ingres
+kubectl get ingress
 ```
 
 Output should look like this:
@@ -1331,8 +1618,65 @@ cncf-saml-ui-callback        nginx   cp-console-openshift-marketplace.apps.gi.th
 cncf-social-login-callback   nginx   cp-console-openshift-marketplace.apps.gi.thinkforward.work    k8s-ingressn-ingressn-7e06ec0c6b-01363c775f8b7ff9.elb.us-east-1.amazonaws.com         80      13s
 ```
 
+:::note[Using an insecure hostname]
+If you used an insecure hostname above, configure your local workstation to redirect traffic
+to the external IP of the ingress.
+
+Find the public hostname address of the ingress under `EXTERNAL-IP`.
+
+```tsx
+kubectl get service --namespace ingress-nginx ingress-nginx-controller
+```
+```tsx
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP                                                                     PORT(S)                      AGE
+ingress-nginx-controller   LoadBalancer   10.100.24.243   a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com   80:31369/TCP,443:30370/TCP   20h
+```
+
+Find the public IP address of the of the public hostname.
+
+```tsx
+nslookup a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com
+Server:         10.255.255.254
+Address:        10.255.255.254#53
+
+Non-authoritative answer:
+Name:   a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com
+Address: 13.58.11.46
+Name:   a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com
+Address: 3.19.41.78
+```
+
+Notice that there are 2 public IP addresses associated with the hostname. This is because that
+hostname is on a load balancer. For our purposes, you only need one of those IP addresses. We
+will use `13.58.11.46` here.
+
+Open your `hosts` file on your workstation where you will be using the browser to connect.
+For Windows that is under `C:\Windows\System32\drivers\etc\hosts`. For Linux that is under
+`/etc/hosts`.
+
+Add a line that redirects network traffic from the insecure hostname to the public IP address and save the file.
+
+```tsx
+13.58.11.46   cp-console-openshift-marketplace.apps.gi.guardium-insights.com
+```
+
+After installing Guardium Insights (next step), another ingress will be created that will need to be added to the local hosts file.
+Add that additional line now, even though that hostname will not redirect properly until after Guardium Insights is installed.
+
+```tsx
+13.58.11.46   guardium.apps.gi.guardium-insights.com
+```
+
+:::
+
 ### Verify Ingress
 
 Verify that the common webui is now up and available by going to the link above (this will reflect whatever you set for your domain). In our case it is `cp-console-openshift-marketplace.apps.gi.thinkforward.work`
+
+:::note[Using an insecure hostname]
+If you used an insecure hostname above, use `cp-console-openshift-marketplace.apps.gi.guardium-insights.com`
+to verify.
+
+:::
 
 ![Webui](../../../assets/images/webui01.png)
