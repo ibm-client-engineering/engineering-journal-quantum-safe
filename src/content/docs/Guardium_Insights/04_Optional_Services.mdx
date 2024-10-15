@@ -6,12 +6,15 @@ sidebar:
   order: 4
 ---
 
-## Export the following vars
+## Export the following vars. 
+
+These should be relevant to your environment, therefore clustername should be your clustername and same with your hostname. Below this is an example.
 
 ```bash
 export clustername=gi-east
 export region=us-east-1
 export NAMESPACE=openshift-marketplace
+export HOSTNAME=apps.gi.thinkforward.work
 ```
 
 ## (Optional) Install the ALB ingress controller
@@ -171,9 +174,8 @@ In our example we are using the subdomain `apps.gi.thinkforward.work`. This will
 
 Create the following file and populate it with appropriate values. This file is an EXAMPLE:
 
-
-`ca_config.txt`
 ```tsx
+cat <<EOF > ca_config.txt
 {
    "KeyAlgorithm":"RSA_2048",
    "SigningAlgorithm":"SHA256WITHRSA",
@@ -183,20 +185,21 @@ Create the following file and populate it with appropriate values. This file is 
       "OrganizationalUnit":"Client Engineering",
       "State":"MA",
       "Locality":"Cambridge",
-      "CommonName":"apps.gi.thinkforward.work"
+      "CommonName":"$HOSTNAME"
    }
 }
+EOF
 ```
 
-
 We're going to use the default OCSP settings. Now create a revocation file
-`revoke_config.txt`
 ```tsx
+cat <<EOF > revoke_config.txt
 {
    "OcspConfiguration":{
       "Enabled":true
    }
 }
+EOF
 ```
 
 Finally, create the CA
@@ -212,10 +215,22 @@ aws acm-pca create-certificate-authority \
 
 This should return the new CA's arn.
 
+```tsx
+{
+    "CertificateAuthorityArn": "arn:aws:acm-pca:us-east-1:748107796891:certificate-authority/00c9d3eb-c837-4cef-917a-fd87ec608a04"
+}
+```
+
 Let's collect that arn into an env var
 
+{/*
 ```tsx
 export ca_arn=$(aws acm-pca list-certificate-authorities --query "CertificateAuthorities[].Arn" --region $region --output text --max-items 1)
+```
+*/}
+
+```tsx
+export ca_arn="arn:aws:acm-pca:us-east-1:748107796891:certificate-authority/00c9d3eb-c837-4cef-917a-fd87ec608a04"
 ```
 
 ### Generate and install the CA cert
@@ -310,20 +325,37 @@ cat <<EOF > EKS-CA-NodePerms-policy.json
 EOF
 ```
 
-Create the policy in IAM
+Create the policy in IAM. This needs to be specific for your cluster using the CA we created.
+
+Export the following var:
 
 ```tsx
-aws iam create-policy --policy-name AWSCAPolicy --policy-document file://EKS-CA-NodePerms-policy.json
+export awscapolicy="AWSCAPolicy-${clustername}"
+```
+
+```tsx
+aws iam create-policy \
+--policy-name ${awscapolicy} \
+--policy-document file://EKS-CA-NodePerms-policy.json
 ```
 
 Let's retrieve the policy arn as an env var
 
 ```tsx
-export ca_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`AWSCAPolicy`].Arn' --output text)
+export ca_policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`'${awscapolicy}'`].Arn' --output text)
 ```
-Let's attach the policy to our EKS node role. In our case the role name is `gi-eks-nodes-role`. This may be different for you.
+
+Let's gather our NodeInstance role name
+
 ```tsx
-aws iam attach-role-policy --role-name "gi-eks-nodes-role" --policy-arn "${ca_policy_arn}" --region "${region}"
+export node_instance_role=$(aws iam list-roles --region $region --query 'Roles[?starts_with(RoleName, `eksctl-'${clustername}'`)]|[?contains(RoleName, `NodeInstanceRole`)].RoleName' --output text)
+```
+Now let's attach the policy to our EKS node role. In our case the role name is `gi-eks-nodes-role`. This may be different for you.
+```tsx
+aws iam attach-role-policy \
+--role-name "${node_instance_role}" \
+--policy-arn "${ca_policy_arn}" \
+--region "${region}"
 ```
 
 ### Create an issuer
