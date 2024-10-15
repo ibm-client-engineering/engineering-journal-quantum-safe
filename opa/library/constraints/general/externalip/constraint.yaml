@@ -8,7 +8,3 @@ spec:
     kinds:
       - apiGroups: [""]
         kinds: ["Service"]
-  parameters:
-    allowedIPs:
-      # this is an example
-      - "203.0.113.0"
