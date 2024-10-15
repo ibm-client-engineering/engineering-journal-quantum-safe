@@ -7,8 +7,6 @@ resources:
 - block-loadbalancer-services
 - block-nodeport-services
 - block-wildcard-ingress
-- containerlimits
-- containerrequests
 - containerresources
 - disallowanonymous
 - disallowedrepos
@@ -18,8 +16,6 @@ resources:
 - httpsonly
 - imagedigests
 - poddisruptionbudget
-- requiredannotations
-- requiredlabels
 - uniqueingresshost
 - uniqueserviceselector
 - storageclass
