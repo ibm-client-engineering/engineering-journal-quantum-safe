@@ -1,7 +1,7 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sRequiredResources
+kind: K8sPSPFSGroup
 metadata:
-  name: container-must-have-limits-and-requests
+  name: psp-fsgroup
 spec:
   enforcementAction: dryrun
   match:
@@ -12,9 +12,7 @@ spec:
       - "kube-*"
       - "gatekeeper-system"
   parameters:
-    limits:
-      - cpu
-      - memory
-    requests:
-      - cpu
-      - memory
+    rule: "MustRunAs" #"MustRunAs" #"MayRunAs", "RunAsAny"
+    ranges:
+    - min: 1000
+      max: 65535

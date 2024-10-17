@@ -1,7 +1,7 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sImageDigests
+kind: K8sPSPReadOnlyRootFilesystem
 metadata:
-  name: container-image-must-have-digest
+  name: psp-readonlyrootfilesystem
 spec:
   enforcementAction: dryrun
   match:
@@ -10,4 +10,3 @@ spec:
         kinds: ["Pod"]
     excludedNamespaces:
       - "kube-*"
-      - "gatekeeper-system"

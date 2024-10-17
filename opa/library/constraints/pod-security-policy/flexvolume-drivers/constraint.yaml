@@ -1,13 +1,14 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sImageDigests
+kind: K8sPSPFlexVolumes
 metadata:
-  name: container-image-must-have-digest
+  name: psp-flexvolume-drivers
 spec:
   enforcementAction: dryrun
   match:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    excludedNamespaces:
-      - "kube-*"
-      - "gatekeeper-system"
+  parameters:
+    allowedFlexVolumes: #[]
+    - driver: "example/lvm"
+    - driver: "example/cifs"

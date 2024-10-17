@@ -1,13 +1,13 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sImageDigests
+kind: K8sPSPAppArmor
 metadata:
-  name: container-image-must-have-digest
+  name: psp-apparmor
 spec:
   enforcementAction: dryrun
   match:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    excludedNamespaces:
-      - "kube-*"
-      - "gatekeeper-system"
+  parameters:
+    allowedProfiles:
+    - runtime/default
