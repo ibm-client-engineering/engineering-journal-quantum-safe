@@ -246,6 +246,8 @@ aws acm-pca get-certificate-authority-csr \
 
 Using the CSR from the previous step as the argument for the --csr parameter, issue the root certificate and export the arn as another env var.
 
+We're going to set the validity to 999 days.
+
 ```tsx
 export root_cert_arn=$(aws acm-pca issue-certificate \
      --certificate-authority-arn $ca_arn \
@@ -253,7 +255,7 @@ export root_cert_arn=$(aws acm-pca issue-certificate \
      --signing-algorithm SHA256WITHRSA \
      --region $region \
      --template-arn arn:aws:acm-pca:::template/RootCACertificate/V1 \
-     --validity Value=365,Type=DAYS \
+     --validity Value=999,Type=DAYS \
      --output text)
 ```
 {/*"CertificateArn": "arn:aws:acm-pca:us-east-1:803455550593:certificate-authority/3c6802d4-b875-4df8-8ac9-a616c36c3915/certificate/b3bd35d6e7d5acf0a4e3697c903dc82f"*/}

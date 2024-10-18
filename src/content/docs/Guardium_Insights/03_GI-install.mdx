@@ -22,6 +22,7 @@ As of this writing, we are using Guardium Insights version `3.5.0` which uses th
 export CP_REPO_USER="cp"
 export CP_REPO_PASS=<Your Password / Entitlement Key to cp.icr.io>
 export NAMESPACE="openshift-marketplace"
+export CLUSTERNAME="<your-cluster-name>"
 export CASE_NAME=ibm-guardium-insights
 export CASE_VERSION=2.5.0
 export LOCAL_CASE_DIR=$HOME/.ibm-pak/data/cases/$CASE_NAME/$CASE_VERSION
@@ -226,7 +227,7 @@ Click `Create Records`.
 
 ### Guardium CR
 
-This is a usable example. Copy this to a new yaml file.
+This is a usable example. Copy this to a new yaml file. The name should be the cluster-name and the namespace should be `openshift-marketplace`.
 
 We want to set the following values in this file
 ```tsx
@@ -256,12 +257,14 @@ Also we will be setting the RWO storage classes to use the gp3 block storage cla
 This will install an instance with the sizing set to `values-small`
 
 `gi-custom-eks.yaml`
-```yaml
+
+```bash
+cat <<EOF > gi-custom-eks.yaml
 apiVersion: gi.ds.isc.ibm.com/v1
 kind: GuardiumInsights
 metadata:
-  name: gi-eks
-  namespace: openshift-marketplace
+  name: ${CLUSTERNAME}
+  namespace: ${NAMESPACE}
 spec:
   dependency-security:
     networkPolicy:
@@ -278,10 +281,10 @@ spec:
                   port: 53
                 - protocol: TCP
                   port: 53
-  version: 3.4.0
+  version: 3.5.0
   license:
     accept: true
-    licenseType: "L-ZNAM-9BHMTZ"
+    licenseType: "L-YRPR-ZV3BA6"
   dependency-postgres:
     podContainerSecurityContextParams:
       fsGroup: 0
@@ -293,7 +296,7 @@ spec:
       runAsUser: 1000
       runAsNonRoot: true
   dependency-redis:
-   podContainerSecurityContextParams1:
+   podContainerSecurityContextParams:
       fsGroup: 0
       runAsUser: 1000
       runAsNonRoot: true
@@ -376,10 +379,10 @@ spec:
     size: values-small
     insights:
       ingress:
-        hostName: guardium.apps.gi.thinkforward.work
-        domainName: apps.gi.thinkforward.work
+        hostName: guardium.${HOSTNAME}
+        domainName: ${HOSTNAME}
       ics:
-        namespace: openshift-marketplace #staging
+        namespace: ${NAMESPACE}
         registry: common-service
     storageClassName: efs-sc
     storageClassNameRWO: ebs-gp3-sc
@@ -389,6 +392,7 @@ spec:
   ssh-service:
     serviceAnnotations:
       service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+EOF
 ```
 
 Apply the above CR 
@@ -411,7 +415,7 @@ Output should look like this:
 
 ```tsx {2}
 NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
-gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+gi-eks   Ready   True     Complete   Completed Reconciliation   3.5.0             3.5.0
 ```
 
 Check that the tenant has been created
@@ -424,7 +428,7 @@ Output should look like this:
 
 ```tsx {2}
 NAME                           TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
-gi-eksctqdrippjy9p2gqvvzwhyc   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+gi-eksctqdrippjy9p2gqvvzwhyc   Ready   True     Complete   Completed Reconciliation   3.5.0             3.5.0
 ```
 
 Verify all ingress paths have been created
@@ -508,7 +512,7 @@ Output should look like this:
 
 ```tsx
 NAME     TYPE    STATUS   REASON     MESSAGE                    DESIRED_VERSION   INSTALLED_VERSION
-gi-eks   Ready   True     Complete   Completed Reconciliation   3.4.0             3.4.0
+gi-eks   Ready   True     Complete   Completed Reconciliation   3.5.0             3.5.0
 ```
 
 ```tsx

@@ -758,7 +758,7 @@ Create the namespace for NGINX
 ```tsx
 kubectl create ns ingress-nginx
 ```
-
+{/*
 Export our relevant subnet ids to a comma delimited env variable
 
 ```tsx
@@ -766,13 +766,22 @@ export subnets=$(aws eks describe-cluster --name ${clustername} --region ${regio
 ```
 
 Now install the helm chart for nginx
+*/}
 
 {/*--set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-subnets'="$subnets" \ */}
+
+:::note[Public vs Private ingress]
+
+Below is for a public facing ingress. Yours might need to be internal only so you would set the `aws-load-balancer-scheme` to `internal` if it needs to be internal.
+
+:::
 
 ```tsx
 helm install ingress-nginx ingress-nginx/ingress-nginx \
 --set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-backend-protocol'=tcp \
 --set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-cross-zone-load-balancing-enabled'="true" \
+--set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-scheme'=internet-facing \
+--set-string controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-nlb-target-type"=ip \
 --set-string controller.service.annotations.'service\.beta\.kubernetes\.io/aws-load-balancer-type'=nlb \
 --namespace=ingress-nginx
 
@@ -1277,6 +1286,17 @@ oc ibm-pak launch $CASE_NAME \
    --namespace $NAMESPACE \
    --args "--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry cp.icr.io --user ${CP_REPO_USER} --pass ${CP_REPO_PASS} --secret ibm-entitlement-key --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
+
+:::note
+It seems sometimes the above command will fail waiting for the `platform-oidc-credentials` to be created. It might mean that the common-services operator needs to be bounced or that you might need to wait between running commands. If it fails on that error, run the following:
+
+```tsx
+kubectl scale deploy ibm-common-service-operator --replicas=0
+kubectl scale deploy ibm-common-service-operator --replicas=1
+```
+
+Then re-run the `oc ibm-pak launch` command once the operator is back up.
+:::
 
 This may take a little while to run.
 
