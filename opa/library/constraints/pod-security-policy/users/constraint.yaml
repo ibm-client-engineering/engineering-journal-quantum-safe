@@ -1,0 +1,29 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sPSPAllowedUsers
+metadata:
+  name: psp-pods-allowed-user-ranges
+spec:
+  enforcementAction: dryrun
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    excludedNamespaces:
+      - "gatekeeper-system"
+      - "kube-*"   
+  parameters:
+    runAsUser:
+      rule: MustRunAsNonRoot # MustRunAsNonRoot # RunAsAny 
+      ranges:
+        - min: 1000
+          max: 65535
+    runAsGroup:
+      rule: MustRunAs # MayRunAs # RunAsAny 
+      ranges:
+        - min: 1000
+          max: 65535
+    supplementalGroups:
+      rule: MustRunAs # MayRunAs # RunAsAny 
+      ranges:
+        - min: 1000
+          max: 65535
