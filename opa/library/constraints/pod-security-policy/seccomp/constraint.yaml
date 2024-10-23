@@ -1,7 +1,7 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sRequiredResources
+kind: K8sPSPSeccomp
 metadata:
-  name: container-must-have-limits-and-requests
+  name: psp-seccomp
 spec:
   enforcementAction: dryrun
   match:
@@ -10,11 +10,6 @@ spec:
         kinds: ["Pod"]
     excludedNamespaces:
       - "kube-*"
-      - "gatekeeper-system"
   parameters:
-    limits:
-      - cpu
-      - memory
-    requests:
-      - cpu
-      - memory
+    allowedProfiles:
+    - runtime/default

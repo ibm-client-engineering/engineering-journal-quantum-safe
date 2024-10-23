@@ -1,13 +1,10 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sImageDigests
+kind: K8sPSPHostNamespace
 metadata:
-  name: container-image-must-have-digest
+  name: psp-host-namespace
 spec:
   enforcementAction: dryrun
   match:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    excludedNamespaces:
-      - "kube-*"
-      - "gatekeeper-system"
