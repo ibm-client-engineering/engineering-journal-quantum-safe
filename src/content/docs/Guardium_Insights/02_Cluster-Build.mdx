@@ -729,6 +729,7 @@ EOF
 
 ## Install NGINX Controller
 
+{/**/}
 :::note[On Ingresses]
 
 If you plan on using AWS ALB for ingress, follow the directions [here](../04_optional_services/#optional-install-the-alb-ingress-controller)
@@ -1055,9 +1056,12 @@ NAME                               DISPLAY            VERSION   REPLACES   PHASE
 ibm-cert-manager-operator.v4.2.7   IBM Cert Manager   4.2.7                Succeeded
 ```
 
+{/*
+
 :::note[Deploying with ACM]
 If you plan to use AWS ACM to manage your certs with an ALB ingress, follow the install instructions [here](../04_optional_services/#use-aws-ca-acm-for-certs-optional)
 :::
+*/}
 
 ## Configure DNS resolution (Optional)
 
@@ -1586,5 +1590,13 @@ If you used an insecure hostname above, use `cp-console-openshift-marketplace.ap
 to verify.
 
 :::
+
+You can retrieve the `cpadmin` password with the following
+
+```tsx
+kubectl get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
+This will return the password for the `cpadmin` user. You can then use `cpadmin` to login.
 
 ![Webui](../../../assets/images/webui01.png)
