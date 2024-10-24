@@ -6,6 +6,8 @@ sidebar:
   order: 2
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 :::note[Useful Links]
 
 Some of these steps come from this documentation for [Guardium Insights on EKS](https://www.ibm.com/docs/en/guardium-insights/3.x?topic=scenarios-installation-amazon-elastic-kubernetes-service-eks)
@@ -898,15 +900,61 @@ kube-system	efs-csi-controller-sa		arn:aws:iam::748107796891:role/eksctl-filenet
 
 ## Install the Operator Lifecycle Manager
 
+:::note[Permissions for OLM]
+The default method of installing OLM is to use the `operator-sdk` command line tool. This method creates `ClusterRole` and
+`ClusterRoleBinding` resources that require wildcard permissions at the cluster level. 
+
+If the security on your cluster is configured to not allow wildcard permissions at the cluster level, proceed with the
+"Custom OLM" section below to install OLM without wildcard permissions.
+
+:::
+
+<Tabs syncKey="OLM">
+<TabItem label="operator-sdk">
+
 Run the following command using the `operator-sdk`
 
 ```tsx
 operator-sdk olm install
 ```
 
+</TabItem>
+<TabItem label="Custom OLM">
+
+Download (Save link as...) the customized [crds.yaml](/ibm-client-engineering/engineering-journal-quantum-safe/olm/crds.yaml) and [olm.yaml](/ibm-client-engineering/engineering-journal-quantum-safe/olm/olm.yaml) for OLM v0.28.0. Keep in mind, this is a point in time customization for GI 3.5.0 and
+OLM v0.28.0.
+
+Create the CRDs
+
+```
+kubectl create -f crds.yaml
+```
+
+Ensure that CRDs were applied.
+
+```
+kubectl wait --for=condition=Established -f crds.yaml
+```
+
+Create the OLM resources
+
+```
+kubectl create -f olm.yaml
+```
+
+Wait for deployments to be ready.
+
+```
+kubectl rollout status -w deployment/olm-operator --namespace="olm"
+kubectl rollout status -w deployment/catalog-operator --namespace="olm"
+```
+</TabItem>
+</Tabs>
+
+---
 Verify the installation
 
-```tsx
+```
 kubectl get csv -n olm | grep packageserver
 ```
 
