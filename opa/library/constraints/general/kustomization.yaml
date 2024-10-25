@@ -16,5 +16,6 @@ resources:
 - httpsonly
 - imagedigests
 - poddisruptionbudget
+- requiredimagepullsecrets
 - requiredlabels
 - uniqueingresshost
