@@ -1,7 +1,7 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sRequiredLabels
+kind: K8sRequiredImagePullSecrets
 metadata:
-  name: must-have-appid
+  name: must-have-imagepullsecret
 spec:
   enforcementAction: dryrun
   match:
@@ -11,7 +11,5 @@ spec:
     excludedNamespaces:
       - "kube-*"
       - "gatekeeper-system"        
-  parameters:
-    message: "All pods must have label of key `applicationid` regardless of the label's value"
-    labels:
-      - key: applicationid
+    # namespaces:
+    #   - "openshift-marketplace"
