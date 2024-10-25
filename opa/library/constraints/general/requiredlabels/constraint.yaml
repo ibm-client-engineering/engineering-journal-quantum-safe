@@ -9,6 +9,6 @@ spec:
       - apiGroups: [""]
         kinds: ["Pod"]
   parameters:
-    message: "All pods must have label of key `appid` regardless of the label's value"
+    message: "All pods must have label of key `applicationid` regardless of the label's value"
     labels:
-      - key: appid
+      - key: applicationid
