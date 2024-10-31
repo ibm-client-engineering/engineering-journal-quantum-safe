@@ -921,7 +921,7 @@ operator-sdk olm install
 </TabItem>
 <TabItem label="Custom OLM">
 
-Download (Save link as...) the customized [crds.yaml](/ibm-client-engineering/engineering-journal-quantum-safe/olm/crds.yaml) and [olm.yaml](/ibm-client-engineering/engineering-journal-quantum-safe/olm/olm.yaml) for OLM v0.28.0. Keep in mind, this is a point in time customization for GI 3.5.0 and
+Download (Save link as...) the customized [crds.yaml](https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/olm/crds.yaml) and [olm.yaml](https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/olm/olm.yaml) for OLM v0.28.0. Keep in mind, this is a point in time customization for GI 3.5.0 and
 OLM v0.28.0.
 
 Create the CRDs
@@ -1090,7 +1090,7 @@ Then click `Create Hosted zone` button to create the hosted zone.
 This will take you to the hosted zone details page. Now it's time to create some records for DNS resolution.
 But first we need the values to use for the internal routing.
 
-Find the private cluster IP address of the load balancer under `CLUSTER-IP`.
+Find the external cluster IP address of the load balancer under `EXTERNAL-IP`.
 
 ```tsx
 kubectl get service --namespace ingress-nginx ingress-nginx-controller
@@ -1100,14 +1100,14 @@ NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP           
 ingress-nginx-controller   LoadBalancer   10.100.24.243   a091398910dbf4ad8aeb2f3f0e864311-916cbf853e32c1d5.elb.us-east-2.amazonaws.com   80:31369/TCP,443:30370/TCP   20h
 ```
 
-Capture that `CLUSTER-IP` value for the next steps.
+Capture that `EXTERNAL-IP` value for the next steps.
 
 Back on the hosted zone details page, click the `Create record` button.
 
-We want to create a record that routes `cp-console-openshift-marketplace.apps.gi.guardium-insights.com` to
-the private IP address captured above.
+We want to create a `CNAME` record that routes `*.apps.gi.guardium-insights.com` to
+the external cluster IP address captured above.
 
-![image](https://media.github.ibm.com/user/207188/files/fbb0bb48-1795-4fbb-af74-c068ecb562b2)
+![image](https://media.github.ibm.com/user/207188/files/ac259a65-0383-4ce7-994b-03c38465814d)
 
 Click `Create Records`.
 

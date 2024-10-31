@@ -1,0 +1,17 @@
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignMetadata
+metadata:
+  name: label-podapplicationid
+spec:
+  location: "metadata.labels.applicationid"
+  parameters:
+    assign:
+      value: "APP123"
+  match:
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "*" ]
