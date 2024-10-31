@@ -3,19 +3,14 @@ kind: K8sRequiredLabels
 metadata:
   name: must-have-appid
 spec:
-  enforcementAction: deny
+  enforcementAction: dryrun
   match:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-<<<<<<< Updated upstream
     excludedNamespaces:
       - "kube-*"
       - "gatekeeper-system"        
-=======
-    namespaces:
-      - "openshift-marketplace"
->>>>>>> Stashed changes
   parameters:
     message: "All pods must have label of key `applicationid` regardless of the label's value"
     labels:
