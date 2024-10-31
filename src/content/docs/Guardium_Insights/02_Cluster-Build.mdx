@@ -453,8 +453,8 @@ Create a security group with an inbound rule that allows inbound NFS traffic for
 
 ```tsx
 security_group_id=$(aws ec2 create-security-group \
-    --group-name EFS4FileNetSecurityGroup \
-    --description "EFS security group for Guardium Insight Clusters" \
+    --group-name EFS4FileNetSecurityGroup-${clustername} \
+    --description "EFS security group for Guardium Insight cluster ${clustername}" \
     --vpc-id $vpc_id \
     --region $region \
     --output text)
@@ -555,9 +555,9 @@ You can retrieve the file system id with the following command:
 ```tsx
 
 ```
-*/}
 
 Also if you are going to use EFS as your default storage, follow the instructions below. Otherwise just create the `efs-sc` storage class and skip the `efs-sc-pg` storage class as we will set the default to the gp3 block storage.
+*/}
 
 :::
 
@@ -581,6 +581,7 @@ volumeBindingMode: Immediate
 EOF
 ```
 
+{/*
 Create this second storageclasses for EFS for common-services operator that will be installed as part of IBM Foundational Services. You will only need this second storage class if you intend on using EFS instead of block storage.
 
 ```tsx
@@ -601,7 +602,6 @@ volumeBindingMode: Immediate
 EOF
 ```
 
-{/*
 Update it with the storage class id as well as the following vars
 ```bash
 sed -i "s/fileSystemId:.*\/fileSystemId: $file_system_id/" EFSStorageClass.yaml
@@ -644,7 +644,6 @@ kubectl get sc
 NAME               PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 ebs-gp3-sc         ebs.csi.aws.com         Delete          WaitForFirstConsumer   false                  6d18h
 efs-sc (default)   efs.csi.aws.com         Delete          Immediate              false                  16h
-efs-sc-pg          efs.csi.aws.com         Delete          Immediate              false                  14h
 gp2                kubernetes.io/aws-ebs   Delete          WaitForFirstConsumer   false                  6d23h
 ```
 
