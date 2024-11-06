@@ -1,0 +1,708 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-has-toc data-has-sidebar data-theme="dark" class="astro-bguv2lll"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Prerequisites | IBM Quantum Safe</title><link rel="canonical" href="https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/guardium_insights/ec2/05-prerequisites/"/><link rel="sitemap" href="/engineering-journal-quantum-safe/sitemap-index.xml"/><link rel="shortcut icon" href="/engineering-journal-quantum-safe/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v4.16.10"/><meta name="generator" content="Starlight v0.24.5"/><meta property="og:title" content="Prerequisites"/><meta property="og:type" content="article"/><meta property="og:url" content="https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/guardium_insights/ec2/05-prerequisites/"/><meta property="og:locale" content="en"/><meta property="og:description" content="Running Guardium Insights with QSPM on EC2"/><meta property="og:site_name" content="IBM Quantum Safe"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Prerequisites"/><meta name="twitter:description" content="Running Guardium Insights with QSPM on EC2"/><meta name="description" content="Running Guardium Insights with QSPM on EC2"/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg> <svg aria-hidden="true" class="dark astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg> <svg aria-hidden="true" class="auto astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> </template><link rel="stylesheet" href="/engineering-journal-quantum-safe/css/index.DSfIzvYJ.css">
+<style>:root{--sl-badge-default-border: var(--sl-color-accent);--sl-badge-default-bg: var(--sl-color-accent-low);--sl-badge-default-text: #fff;--sl-badge-note-border: var(--sl-color-blue);--sl-badge-note-bg: var(--sl-color-blue-low);--sl-badge-note-text: #fff;--sl-badge-danger-border: var(--sl-color-red);--sl-badge-danger-bg: var(--sl-color-red-low);--sl-badge-danger-text: #fff;--sl-badge-success-border: var(--sl-color-green);--sl-badge-success-bg: var(--sl-color-green-low);--sl-badge-success-text: #fff;--sl-badge-caution-border: var(--sl-color-orange);--sl-badge-caution-bg: var(--sl-color-orange-low);--sl-badge-caution-text: #fff;--sl-badge-tip-border: var(--sl-color-purple);--sl-badge-tip-bg: var(--sl-color-purple-low);--sl-badge-tip-text: #fff}[data-theme=light]:root{--sl-badge-default-bg: var(--sl-color-accent-high);--sl-badge-note-bg: var(--sl-color-blue-high);--sl-badge-danger-bg: var(--sl-color-red-high);--sl-badge-success-bg: var(--sl-color-green-high);--sl-badge-caution-bg: var(--sl-color-orange-high);--sl-badge-tip-bg: var(--sl-color-purple-high)}.sl-badge:where(.astro-avdet4wd){display:inline-block;border:1px solid var(--sl-color-border-badge);border-radius:.25rem;font-family:var(--sl-font-system-mono);line-height:normal;color:var(--sl-color-text-badge);background-color:var(--sl-color-bg-badge);overflow-wrap:anywhere}.sidebar-content .sl-badge:where(.astro-avdet4wd){line-height:1;font-size:var(--sl-text-xs);padding:.125rem .375rem}.sidebar-content a[aria-current=page]>.sl-badge:where(.astro-avdet4wd){--sl-color-bg-badge: transparent;--sl-color-border-badge: currentColor;color:inherit}.default:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-default-bg);--sl-color-border-badge: var(--sl-badge-default-border);--sl-color-text-badge: var(--sl-badge-default-text)}.note:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-note-bg);--sl-color-border-badge: var(--sl-badge-note-border);--sl-color-text-badge: var(--sl-badge-note-text)}.danger:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-danger-bg);--sl-color-border-badge: var(--sl-badge-danger-border);--sl-color-text-badge: var(--sl-badge-danger-text)}.success:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-success-bg);--sl-color-border-badge: var(--sl-badge-success-border);--sl-color-text-badge: var(--sl-badge-success-text)}.tip:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-tip-bg);--sl-color-border-badge: var(--sl-badge-tip-border);--sl-color-text-badge: var(--sl-badge-tip-text)}.caution:where(.astro-avdet4wd){--sl-color-bg-badge: var(--sl-badge-caution-bg);--sl-color-border-badge: var(--sl-badge-caution-border);--sl-color-text-badge: var(--sl-badge-caution-text)}.small:where(.astro-avdet4wd){font-size:var(--sl-text-xs);padding:.125rem .25rem}.medium:where(.astro-avdet4wd){font-size:var(--sl-text-sm);padding:.175rem .35rem}.large:where(.astro-avdet4wd){font-size:var(--sl-text-base);padding:.225rem .45rem}.sl-markdown-content :is(h1,h2,h3,h4,h5,h6) .sl-badge:where(.astro-avdet4wd){vertical-align:middle}
+.card-grid:where(.astro-zntqmydn){display:grid;gap:1rem}.card-grid:where(.astro-zntqmydn)>*{margin-top:0!important}@media (min-width: 50rem){.card-grid:where(.astro-zntqmydn){grid-template-columns:1fr 1fr;gap:1.5rem}.stagger:where(.astro-zntqmydn){--stagger-height: 5rem;padding-bottom:var(--stagger-height)}.stagger:where(.astro-zntqmydn)>*:nth-child(2n){transform:translateY(var(--stagger-height))}}
+svg:where(.astro-c6vsoqas){color:var(--sl-icon-color);font-size:var(--sl-icon-size, 1em);width:1em;height:1em}
+starlight-tabs:where(.astro-esqgolmp){display:block}.tablist-wrapper:where(.astro-esqgolmp){overflow-x:auto}:where(.astro-esqgolmp)[role=tablist]{display:flex;list-style:none;border-bottom:2px solid var(--sl-color-gray-5);padding:0}.tab:where(.astro-esqgolmp){margin-bottom:-2px}.tab:where(.astro-esqgolmp)>:where(.astro-esqgolmp)[role=tab]{display:flex;align-items:center;gap:.5rem;padding:0 1.25rem;text-decoration:none;border-bottom:2px solid var(--sl-color-gray-5);color:var(--sl-color-gray-3);outline-offset:var(--sl-outline-offset-inside);overflow-wrap:initial}.tab:where(.astro-esqgolmp) :where(.astro-esqgolmp)[role=tab][aria-selected=true]{color:var(--sl-color-white);border-color:var(--sl-color-text-accent);font-weight:600}.tablist-wrapper:where(.astro-esqgolmp)~[role=tabpanel]{margin-top:1rem}
+.sl-link-card:where(.astro-mf7fz2mj){display:grid;grid-template-columns:1fr auto;gap:.5rem;border:1px solid var(--sl-color-gray-5);border-radius:.5rem;padding:1rem;box-shadow:var(--sl-shadow-sm);position:relative}a:where(.astro-mf7fz2mj){text-decoration:none;line-height:var(--sl-line-height-headings)}a:where(.astro-mf7fz2mj):before{content:"";position:absolute;inset:0}.stack:where(.astro-mf7fz2mj){flex-direction:column;gap:.5rem}.title:where(.astro-mf7fz2mj){color:var(--sl-color-white);font-weight:600;font-size:var(--sl-text-lg)}.description:where(.astro-mf7fz2mj){color:var(--sl-color-gray-3);line-height:1.5}.icon:where(.astro-mf7fz2mj){color:var(--sl-color-gray-3)}.sl-link-card:where(.astro-mf7fz2mj):hover{background:var(--sl-color-gray-7, var(--sl-color-gray-6));border-color:var(--sl-color-gray-2)}.sl-link-card:where(.astro-mf7fz2mj):hover .icon:where(.astro-mf7fz2mj){color:var(--sl-color-white)}
+.sl-steps{--bullet-size: calc(var(--sl-line-height) * 1rem);--bullet-margin: .375rem;list-style:none;counter-reset:steps-counter var(--sl-steps-start, 0);padding-inline-start:0}.sl-steps>li{counter-increment:steps-counter;position:relative;padding-inline-start:calc(var(--bullet-size) + 1rem);padding-bottom:1px;min-height:calc(var(--bullet-size) + var(--bullet-margin))}.sl-steps>li+li{margin-top:0}.sl-steps>li:before{content:counter(steps-counter);position:absolute;top:0;inset-inline-start:0;width:var(--bullet-size);height:var(--bullet-size);line-height:var(--bullet-size);font-size:var(--sl-text-xs);font-weight:600;text-align:center;color:var(--sl-color-white);background-color:var(--sl-color-gray-6);border-radius:99rem;box-shadow:inset 0 0 0 1px var(--sl-color-gray-5)}.sl-steps>li:not(:last-of-type):after{--guide-width: 1px;content:"";position:absolute;top:calc(var(--bullet-size) + var(--bullet-margin));bottom:var(--bullet-margin);inset-inline-start:calc((var(--bullet-size) - var(--guide-width)) / 2);width:var(--guide-width);background-color:var(--sl-color-hairline-light)}.sl-steps>li>:first-child{--lh: calc(1em * var(--sl-line-height));--shift-y: calc(.5 * (var(--bullet-size) - var(--lh)));transform:translateY(var(--shift-y));margin-bottom:var(--shift-y)}.sl-steps>li>:first-child:where(h1,h2,h3,h4,h5,h6){--lh: calc(1em * var(--sl-line-height-headings))}@supports (--prop: 1lh){.sl-steps>li>:first-child{--lh: 1lh}}
+</style><script type="module" src="/engineering-journal-quantum-safe/css/hoisted.DX6xi1Pa.js"></script>
+<script type="module" src="/engineering-journal-quantum-safe/css/page.7qqag-5g.js"></script></head> <body class="astro-bguv2lll"> <a href="#_top" class="astro-7q3lir66">Skip to content</a>  <div class="page sl-flex astro-vrdttmbt"> <header class="header astro-vrdttmbt"><div class="header sl-flex astro-kmkmnagf"> <div class="title-wrapper sl-flex astro-kmkmnagf"> <a href="/engineering-journal-quantum-safe/" class="site-title sl-flex astro-m46x6ez3">  <img class="astro-m46x6ez3" alt="" src="/engineering-journal-quantum-safe/css/IBM_logo®_rev_blue50_RGB.CUr4ejvg.png" width="2967" height="1975">  <span class="astro-m46x6ez3"> IBM Quantum Safe </span> </a>  </div> <div class="sl-flex astro-kmkmnagf"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="astro-v37mnknz"> <button data-open-modal disabled class="astro-v37mnknz">  <svg aria-label="Search" class="astro-v37mnknz astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg>  <span class="sl-hidden md:sl-block astro-v37mnknz" aria-hidden="true">Search</span> <svg aria-label="(Press / to Search)" class="sl-hidden md:sl-block astro-v37mnknz astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 2H7a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5Zm3 15a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10Z"/><path d="M15.293 6.707a1 1 0 1 1 1.414 1.414l-8.485 8.486a1 1 0 0 1-1.414-1.415l8.485-8.485Z"/></svg>  </button> <dialog style="padding:0" aria-label="Search" class="astro-v37mnknz"> <div class="dialog-frame sl-flex astro-v37mnknz">  <button data-close-modal class="sl-flex md:sl-hidden astro-v37mnknz"> Cancel </button> <div class="search-container astro-v37mnknz"> <div id="starlight__search" class="astro-v37mnknz"></div> </div> </div> </dialog> </site-search>    </div> <div class="sl-hidden md:sl-flex right-group astro-kmkmnagf"> <div class="sl-flex social-icons astro-kmkmnagf"> <a href="https://github.com/ibm-client-engineering/engineering-journal-quantum-safe" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">GitHub</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg> </a> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg>  <select value="auto" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </label>  </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>   </div> </div> </header> <nav class="sidebar astro-vrdttmbt" aria-label="Main"> <starlight-menu-button class="astro-jif73yzw"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-jif73yzw"> <svg aria-hidden="true" class="astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg>  </button> </starlight-menu-button>    <div id="starlight__sidebar" class="sidebar-pane astro-vrdttmbt"> <div class="sidebar-content sl-flex astro-vrdttmbt"> <ul class="top-level astro-3ii7xxms"> <li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Forward</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/how-we-work/fundamentals/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">How We Work</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/how-we-work/mission/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Our Mission</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/overview" class="large astro-3ii7xxms"> <span class="astro-3ii7xxms">Overview</span>  </a> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">QSR</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Adaptive Proxy</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qsr/adaptive_proxy/01_installation/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Installation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qsr/adaptive_proxy/02_configuration/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Configuration</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Performance Test Harness</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qsr/performance_test_harness/01_installation/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Installation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qsr/performance_test_harness/02_usage/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Usage</span>  </a> </li> </ul>  </details> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">QSE</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qse/01_installation/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Installation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/qse/02_scanning/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Scanning</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Guardium Insights</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">EC2</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/ec2/05-prerequisites/" aria-current="page" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Prerequisites</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/ec2/10-preparation/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Preparation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/ec2/15-upi_install/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">OpenShift</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">EKS</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/eks/01_pre-reqs/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Pre-Requisites</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/eks/02_cluster-build/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">EKS Cluster Build</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/03_gi-install/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Guardium Insights Installation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/engineering-journal-quantum-safe/guardium_insights/04_optional_services/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Optional Services</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Reference</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="https://www.ibm.com/docs/en/quantum-safe/quantum-safe-remediator/1.0.x" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">QSR</span> <span class="sl-badge default small  astro-3ii7xxms astro-avdet4wd">IBM</span>  </a> </li><li class="astro-3ii7xxms"> <a href="https://www.ibm.com/docs/en/quantum-safe/quantum-safe-explorer/1.0.x" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">QSE</span> <span class="sl-badge default small  astro-3ii7xxms astro-avdet4wd">IBM</span>  </a> </li><li class="astro-3ii7xxms"> <a href="https://www.ibm.com/docs/en/guardium-insights/3.x?topic=scenarios-installation-amazon-elastic-kubernetes-service-eks" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Guardium Insights</span> <span class="sl-badge default small  astro-3ii7xxms astro-avdet4wd">IBM</span>  </a> </li> </ul>  </details> </li> </ul>  <div class="md:sl-hidden"> <div class="mobile-preferences sl-flex astro-wu23bvmt"> <div class="sl-flex social-icons astro-wu23bvmt"> <a href="https://github.com/ibm-client-engineering/engineering-journal-quantum-safe" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">GitHub</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg> </a> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg>  <select value="auto" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </label>  </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>   </div>  </div> </div> </div> </nav> <div class="main-frame astro-vrdttmbt">  <div class="lg:sl-flex astro-67yu43on"> <aside class="right-sidebar-container astro-67yu43on"> <div class="right-sidebar astro-67yu43on"> <div class="lg:sl-hidden astro-pb3aqygn"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-doynk5tl"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-doynk5tl"><details id="starlight__mobile-toc" class="astro-doynk5tl"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-doynk5tl"><div class="toggle sl-flex astro-doynk5tl">On this page<svg aria-hidden="true" class="caret astro-doynk5tl astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </div><span class="display-current astro-doynk5tl"></span></summary><div class="dropdown astro-doynk5tl"><ul class="isMobile astro-g2bywc46" style="--depth: 0;"> <li class="astro-g2bywc46" style="--depth: 0;"> <a href="#_top" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#redhat-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">RedHat Requirements</span> </a> <ul class="isMobile astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#redhat-ocp-account-and-pull-secret" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">RedHat OCP Account and Pull Secret</span> </a>  </li> </ul>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#ibm-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">IBM Requirements</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#aws-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">AWS Requirements</span> </a> <ul class="isMobile astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#iam-user-requirements" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">IAM User Requirements</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#required-aws-infrastructure-components" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Required AWS Infrastructure Components</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#parameters-for-cloudformation-template" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Parameters for CloudFormation Template</span> </a>  </li> </ul>  </li> </ul> </div></details></nav></mobile-starlight-toc></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-pb3aqygn"><div class="sl-container astro-pb3aqygn"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-g2bywc46" style="--depth: 0;"> <li class="astro-g2bywc46" style="--depth: 0;"> <a href="#_top" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#redhat-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">RedHat Requirements</span> </a> <ul class="astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#redhat-ocp-account-and-pull-secret" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">RedHat OCP Account and Pull Secret</span> </a>  </li> </ul>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#ibm-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">IBM Requirements</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#aws-requirements" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">AWS Requirements</span> </a> <ul class="astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#iam-user-requirements" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">IAM User Requirements</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#required-aws-infrastructure-components" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Required AWS Infrastructure Components</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#parameters-for-cloudformation-template" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Parameters for CloudFormation Template</span> </a>  </li> </ul>  </li> </ul> </nav></starlight-toc></div></div> </div> </aside> <div class="main-pane astro-67yu43on">  <main data-pagefind-body lang="en" dir="ltr" class="astro-bguv2lll">    <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <h1 id="_top" class="astro-j6tvhyss">Prerequisites</h1>  </div> </div>  <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <div class="sl-markdown-content"> <p>Installing OpenShift and Cloud Pak for Data requires specific access, resources and considerations on AWS. In this documentation, we are assuming a CloudFormation install on user-provisioned infrastructure.</p>
+<h2 id="redhat-requirements">RedHat Requirements</h2>
+<h3 id="redhat-ocp-account-and-pull-secret">RedHat OCP Account and Pull Secret</h3>
+<p>This is the required account used for the OCP licensing.
+Use this URL to download your RedHat Pull Secret: <a href="https://console.redhat.com/openshift/install/pull-secret">https://console.redhat.com/openshift/install/pull-secret</a></p>
+<p>If your organization does not own an OCP license, a trial license can be used for OCP and is valid for 60 days. Steps listed in the expandable section below.</p>
+<details><summary><b>Obtain a RedHat Trial Account</b></summary><p>Go to <a href="http://www.redhat.com">www.redhat.com</a> and click on “Log In”.</p><p><img src="/docimages/redhat_login.png" alt="redhat_login"></p><p>Then click on “Register for a Red Hat Account”.</p><p><img src="/docimages/redhat_register.png" alt="redhat_register"></p><p>Provide the requested information and “Create Account”.</p><p>You will receive a verification email. Click on the link in the email to confirm.</p><p>Now go to <a href="http://www.openshift.com">www.openshift.com</a> and log in with your RedHat account. After logging in you will see this:</p><p><img src="/docimages/openshift_try_it.png" alt="openshift_try_it"></p><p>Click on “Try It” which will bring you to a page of different OpenShift versions to try, find the following version and click “Start your Trial”:</p><p><img src="/docimages/openshift_start_trial.png" alt="openshift_start_trial"></p><p>A new page will load and you will need to enter all the required information before clicking “Submit”.</p><p>You can now log into <a href="https://console.redhat.com/openshift/install/pull-secret">https://console.redhat.com/openshift/install/pull-secret</a> and download the pull-secret.</p></details>
+<h2 id="ibm-requirements">IBM Requirements</h2>
+<p>CP4D and watsonx.ai are part of IBM’s entitled software program. In order to download and install it you will need your IBM entitlement key which can be retrieved <a href="https://myibm.ibm.com/products-services/containerlibrary">here</a>.</p>
+<p>You will need your valid IBM id in order to login.</p>
+<h2 id="aws-requirements">AWS Requirements</h2>
+<h3 id="iam-user-requirements">IAM User Requirements</h3>
+<p>If deploying using an IAM user, below are the requirements, roles, and steps.</p>
+<p>Each Amazon Web Services (AWS) account contains a root user account that is based on the email address you used to create the account. This is a highly-privileged account, and it is recommended to use it for only initial account and billing configuration, creating an initial set of users, and securing the account. Before you install OpenShift Container Platform, create a secondary IAM administrative user. As you complete the Creating an IAM User in Your AWS Account procedure in the AWS documentation, set the following options:</p>
+<ol>
+<li>
+<p>Specify the IAM user name and select Programmatic access.</p>
+</li>
+<li>
+<p>Attach the AdministratorAccess policy to ensure that the account has sufficient permission to create the cluster. This policy provides the cluster with the ability to grant credentials to each OpenShift Container Platform component. The cluster grants the components only the credentials that they require.</p>
+</li>
+</ol>
+<div><p>While it is possible to create a policy that grants the all of the required AWS permissions and attach it to the user, this is not the preferred option. <strong>The cluster will not have the ability to grant additional credentials to individual components, so the same credentials are used by all components.</strong></p></div>
+<ol start="3">
+<li>
+<p>Optional: Add metadata to the user by attaching tags.</p>
+</li>
+<li>
+<p>Confirm that the user name that you specified is granted the AdministratorAccess policy.</p>
+</li>
+<li>
+<p>Record the access key ID and secret access key values. You must use these values when you configure your local machine to run the installation program.</p>
+</li>
+</ol>
+<div><p>You cannot use a temporary session token that you generated while using a multi-factor authentication device to authenticate to AWS when you deploy a cluster. The cluster continues to use your current AWS credentials to create AWS resources for the entire life of the cluster, so you must use key-based, long-term credentials.</p></div>
+<p>Your IAM user must have the permission tag:GetResources
+ in the region us-east-1 to delete the base cluster resources. As part of the AWS API requirement, the OpenShift Container Platform installation program performs various actions in this region.</p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>When you attach the AdministratorAccess policy to the IAM user that you create in Amazon Web Services (AWS), you grant that user all of the required permissions.</p></section></aside>
+<p>To deploy all components of an OpenShift Container Platform cluster, the IAM user requires the following permissions:</p>
+<h4 id="required-permissions-if-not-using-administrator-access">Required Permissions (if not using Administrator Access)</h4>
+<details><summary><b>Required EC2 permissions for installation</b></summary><p>ec2:AuthorizeSecurityGroupEgress
+</p><p>ec2:AuthorizeSecurityGroupIngress
+</p><p>ec2:CopyImage
+</p><p>ec2:CreateNetworkInterface
+</p><p>ec2:AttachNetworkInterface
+</p><p>ec2:CreateSecurityGroup
+</p><p>ec2:CreateTags
+</p><p>ec2:CreateVolume
+</p><p>ec2:DeleteSecurityGroup
+</p><p>ec2:DeleteSnapshot
+</p><p>ec2:DeleteTags
+</p><p>ec2:DeregisterImage
+</p><p>ec2:DescribeAccountAttributes
+</p><p>ec2:DescribeAddresses
+</p><p>ec2:DescribeAvailabilityZones
+</p><p>ec2:DescribeDhcpOptions
+</p><p>ec2:DescribeImages
+</p><p>ec2:DescribeInstanceAttribute
+</p><p>ec2:DescribeInstanceCreditSpecifications
+</p><p>ec2:DescribeInstances
+</p><p>ec2:DescribeInstanceTypes
+</p><p>ec2:DescribeInternetGateways
+</p><p>ec2:DescribeKeyPairs
+</p><p>ec2:DescribeNatGateways
+</p><p>ec2:DescribeNetworkAcls
+</p><p>ec2:DescribeNetworkInterfaces
+</p><p>ec2:DescribePrefixLists
+</p><p>ec2:DescribeRegions
+</p><p>ec2:DescribeRouteTables
+</p><p>ec2:DescribeSecurityGroups
+</p><p>ec2:DescribeSubnets
+</p><p>ec2:DescribeTags
+</p><p>ec2:DescribeVolumes
+</p><p>ec2:DescribeVpcAttribute
+</p><p>ec2:DescribeVpcClassicLink
+</p><p>ec2:DescribeVpcClassicLinkDnsSupport
+</p><p>ec2:DescribeVpcEndpoints
+</p><p>ec2:DescribeVpcs
+</p><p>ec2:GetEbsDefaultKmsKeyId
+</p><p>ec2:ModifyInstanceAttribute
+</p><p>ec2:ModifyNetworkInterfaceAttribute
+</p><p>ec2:RevokeSecurityGroupEgress
+</p><p>ec2:RevokeSecurityGroupIngress
+</p><p>ec2:RunInstances
+</p><p>ec2:TerminateInstances
+</p></details>
+<details><summary><b>Required permissions for creating network resources during installation</b></summary><p>ec2:AllocateAddress
+</p><p>ec2:AssociateAddress
+</p><p>ec2:AssociateDhcpOptions
+</p><p>ec2:AssociateRouteTable
+</p><p>ec2:AttachInternetGateway
+</p><p>ec2:CreateDhcpOptions
+</p><p>ec2:CreateInternetGateway
+</p><p>ec2:CreateNatGateway
+</p><p>ec2:CreateRoute
+</p><p>ec2:CreateRouteTable
+</p><p>ec2:CreateSubnet
+</p><p>ec2:CreateVpc
+</p><p>ec2:CreateVpcEndpoint
+</p><p>ec2:ModifySubnetAttribute
+</p><p>ec2:ModifyVpcAttribute
+</p><aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>If you use an existing VPC, your account does not require these permissions for creating network resources.</p></section></aside></details>
+<details><summary><b>Required Elastic Load Balancing permissions (ELB) for installation</b></summary><p>elasticloadbalancing:AddTags
+</p><p>elasticloadbalancing:ApplySecurityGroupsToLoadBalancer
+</p><p>elasticloadbalancing:AttachLoadBalancerToSubnets
+</p><p>elasticloadbalancing:ConfigureHealthCheck
+</p><p>elasticloadbalancing:CreateLoadBalancer
+</p><p>elasticloadbalancing:CreateLoadBalancerListeners
+</p><p>elasticloadbalancing:DeleteLoadBalancer
+</p><p>elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+</p><p>elasticloadbalancing:DescribeInstanceHealth
+</p><p>elasticloadbalancing:DescribeLoadBalancerAttributes
+</p><p>elasticloadbalancing:DescribeLoadBalancers
+</p><p>elasticloadbalancing:DescribeTags
+</p><p>elasticloadbalancing:ModifyLoadBalancerAttributes
+</p><p>elasticloadbalancing:RegisterInstancesWithLoadBalancer
+</p><p>elasticloadbalancing:SetLoadBalancerPoliciesOfListener
+</p></details>
+<details><summary><b>Required Elastic Load Balancing permissions (ELBv2) for installation</b></summary><p>elasticloadbalancing:AddTags
+</p><p>elasticloadbalancing:CreateListener
+</p><p>elasticloadbalancing:CreateLoadBalancer
+</p><p>elasticloadbalancing:CreateTargetGroup
+</p><p>elasticloadbalancing:DeleteLoadBalancer
+</p><p>elasticloadbalancing:DeregisterTargets
+</p><p>elasticloadbalancing:DescribeListeners
+</p><p>elasticloadbalancing:DescribeLoadBalancerAttributes
+</p><p>elasticloadbalancing:DescribeLoadBalancers
+</p><p>elasticloadbalancing:DescribeTargetGroupAttributes
+</p><p>elasticloadbalancing:DescribeTargetHealth
+</p><p>elasticloadbalancing:ModifyLoadBalancerAttributes
+</p><p>elasticloadbalancing:ModifyTargetGroup
+</p><p>elasticloadbalancing:ModifyTargetGroupAttributes
+</p><p>elasticloadbalancing:RegisterTargets
+</p></details>
+<details><summary><b>Required IAM permissions for installation</b></summary><p>iam:AddRoleToInstanceProfile
+</p><p>iam:CreateInstanceProfile
+</p><p>iam:CreateRole
+</p><p>iam:DeleteInstanceProfile
+</p><p>iam:DeleteRole
+</p><p>iam:DeleteRolePolicy
+</p><p>iam:GetInstanceProfile
+</p><p>iam:GetRole
+</p><p>iam:GetRolePolicy
+</p><p>iam:GetUser
+</p><p>iam:ListInstanceProfilesForRole
+</p><p>iam:ListRoles
+</p><p>iam:ListUsers
+</p><p>iam:PassRole
+</p><p>iam:PutRolePolicy
+</p><p>iam:RemoveRoleFromInstanceProfile
+</p><p>iam:SimulatePrincipalPolicy
+</p><p>iam:TagRole
+</p><aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>If you have not created a load balancer in your AWS account, the IAM user also requires the iam:CreateServiceLinkedRole
+ permission.</p></section></aside></details>
+<details><summary><b>Required Route 53 permissions for installation</b></summary><p>route53:ChangeResourceRecordSets
+</p><p>route53:ChangeTagsForResource
+</p><p>route53:CreateHostedZone
+</p><p>route53:DeleteHostedZone
+</p><p>route53:GetChange
+</p><p>route53:GetHostedZone
+</p><p>route53:ListHostedZones
+</p><p>route53:ListHostedZonesByName
+</p><p>route53:ListResourceRecordSets
+</p><p>route53:ListTagsForResource
+</p><p>route53:UpdateHostedZoneComment
+</p></details>
+<details><summary><b>Required S3 permissions for installation</b></summary><p>s3:CreateBucket
+</p><p>s3:DeleteBucket
+</p><p>s3:GetAccelerateConfiguration
+</p><p>s3:GetBucketAcl
+</p><p>s3:GetBucketCors
+</p><p>s3:GetBucketLocation
+</p><p>s3:GetBucketLogging
+</p><p>s3:GetBucketPolicy
+</p><p>s3:GetBucketObjectLockConfiguration
+</p><p>s3:GetBucketRequestPayment
+</p><p>s3:GetBucketTagging
+</p><p>s3:GetBucketVersioning
+</p><p>s3:GetBucketWebsite
+</p><p>s3:GetEncryptionConfiguration
+</p><p>s3:GetLifecycleConfiguration
+</p><p>s3:GetReplicationConfiguration
+</p><p>s3:ListBucket
+</p><p>s3:PutBucketAcl
+</p><p>s3:PutBucketTagging
+</p><p>s3:PutEncryptionConfiguration
+</p></details>
+<details><summary><b>S3 permissions that cluster Operators required</b></summary><p>s3:DeleteObject
+</p><p>s3:GetObject
+</p><p>s3:GetObjectAcl
+</p><p>s3:GetObjectTagging
+</p><p>s3:GetObjectVersion
+</p><p>s3:PutObject
+</p><p>s3:PutObjectAcl
+</p><p>s3:PutObjectTagging
+</p></details>
+<details><summary><b>Required permissions to delete base cluster resources</b></summary><p>autoscaling:DescribeAutoScalingGroups
+</p><p>ec2:DeletePlacementGroup
+</p><p>ec2:DeleteNetworkInterface
+</p><p>ec2:DeleteVolume
+</p><p>elasticloadbalancing:DeleteTargetGroup
+</p><p>elasticloadbalancing:DescribeTargetGroups
+</p><p>iam:DeleteAccessKey
+</p><p>iam:DeleteUser
+</p><p>iam:ListAttachedRolePolicies
+</p><p>iam:ListInstanceProfiles
+</p><p>iam:ListRolePolicies
+</p><p>iam:ListUserPolicies
+</p><p>s3:DeleteObject
+</p><p>s3:ListBucketVersions
+</p><p>tag:GetResources
+</p></details>
+<details><summary><b>Required permissions to delete network resources</b></summary><p>ec2:DeleteDhcpOptions
+</p><p>ec2:DeleteInternetGateway
+</p><p>ec2:DeleteNatGateway
+</p><p>ec2:DeleteRoute
+</p><p>ec2:DeleteRouteTable
+</p><p>ec2:DeleteSubnet
+</p><p>ec2:DeleteVpc
+</p><p>ec2:DeleteVpcEndpoints
+</p><p>ec2:DetachInternetGateway
+</p><p>ec2:DisassociateRouteTable
+</p><p>ec2:ReleaseAddress
+</p><p>ec2:ReplaceRouteTableAssociation
+</p><aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>If you use an existing VPC, your account does not require these permissions to delete network resources. Instead, your account only requires the tag:UntagResources
+ permission to delete network resources.</p></section></aside></details>
+<details><summary><b>Required permissions to delete a cluster with shared instance roles</b></summary><p>iam:UntagRole
+</p></details>
+<details><summary><b>Additional IAM and S3 permissions that are required to create manifests</b></summary><p>iam:DeleteAccessKey
+</p><p>iam:DeleteUser
+</p><p>iam:DeleteUserPolicy
+</p><p>iam:GetUserPolicy
+</p><p>iam:ListAccessKeys
+</p><p>iam:PutUserPolicy
+</p><p>iam:TagUser
+</p><p>s3:PutBucketPublicAccessBlock
+</p><p>s3:GetBucketPublicAccessBlock
+</p><p>s3:PutLifecycleConfiguration
+</p><p>s3:HeadBucket
+</p><p>s3:ListBucketMultipartUploads
+</p><p>s3:AbortMultipartUpload
+</p><aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>If you are managing your cloud provider credentials with mint mode, the IAM user also requires the iam:CreateAccessKey
+ and iam:CreateUser
+ permissions.</p></section></aside></details>
+<details><summary><b>Optional permissions for instance and quota checks for installation</b></summary><p>ec2:DescribeInstanceTypeOfferings
+</p><p>servicequotas:ListAWSDefaultServiceQuotas
+</p></details>
+<details><summary><b>Optional permissions for the cluster owner account when installing a cluster on a shared VPC</b></summary><p>sts:AssumeRole
+</p></details>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>For more details on the IAM user requirements, see <a href="https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-account.html#installing-aws-account">https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-account.html#installing-aws-account</a></p></section></aside>
+<h4 id="aws-role-permissions-checker">AWS Role Permissions Checker</h4>
+<p>Bash script that can be run on linux or OS X. Requires AWS CLI to be installed and configured.</p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>Script user will need the following permissions:</p><ul>
+<li>iam:SimulatePrincipalPolicy
+</li>
+<li>iam:GetPolicy
+</li>
+<li>iam:GetPolicyVersion
+</li>
+</ul></section></aside>
+<p><a href="https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/scripts/check-permissions.sh"> Download the script </a></p>
+<p>Or run the following commands:</p>
+<div class="expressive-code"><link rel="stylesheet" href="/engineering-journal-quantum-safe/css/ec.j8ofn.css"><script type="module" src="/engineering-journal-quantum-safe/css/ec.8zarh.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="plaintext"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">wget /assets/script/check-permissions.sh</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">chmod +x check-permission.sh</span></div></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="wget /assets/script/check-permissions.shchmod +x check-permission.sh"><div></div></button></div></figure></div>
+<p>To run the script you will need to download the “permissions.txt” file. <br>
+Download <a href="https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/scripts/permissions.txt"> permissions.txt </a></p>
+<p>Script Syntax</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="plaintext"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">./check-permissions.sh &#x3C;ROLE> &#x3C;PERMISSIONS FILE></span></div></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="./check-permissions.sh <ROLE> <PERMISSIONS FILE>"><div></div></button></div></figure></div>
+<p>The permissions file is long and will take a few minutes for the script to work through. The output from the script is a file named “missing_permissions.txt”.</p>
+<h3 id="required-aws-infrastructure-components">Required AWS Infrastructure Components</h3>
+<p>To install OpenShift Container Platform on user-provisioned infrastructure in Amazon Web Services (AWS), you must manually create both the machines and their supporting infrastructure. For more information about the integration testing for different platforms, see the OpenShift Container Platform 4.x Tested Integrations page.</p>
+<p>By using the provided CloudFormation templates, you can create stacks of AWS resources that represent the following components:</p>
+<ul>
+<li>An AWS Virtual Private Cloud (VPC)</li>
+<li>Networking and load balancing components</li>
+<li>Security groups and roles</li>
+<li>An OpenShift Container Platform bootstrap node</li>
+<li>OpenShift Container Platform control plane nodes</li>
+<li>An OpenShift Container Platform compute node</li>
+</ul>
+<p>Alternatively, you can manually create the components or you can reuse existing infrastructure that meets the cluster requirements. Review the CloudFormation templates for more details about how the components interrelate.</p>
+<p>Other infrastructure components:</p>
+<ul>
+<li>A VPC</li>
+<li>DNS entries</li>
+<li>Load balancers (classic or network) and listeners</li>
+<li>A public and a private Route 53 zone</li>
+<li>Security groups</li>
+<li>IAM roles</li>
+<li>S3 buckets</li>
+</ul>
+<h4 id="required-vpc-components">Required VPC Components</h4>
+<p>You must provide a suitable VPC and subnets that allow communication to your machines:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="center">Component</th><th align="center">AWS type</th><th align="center">Description</th></tr></thead><tbody><tr><td align="center">VPC</td><td align="center"><code dir="auto">AWS::EC2::VPC</code>      <code dir="auto">AWS::EC2::VPCEndpoint</code></td><td align="center">You must provide a public VPC for the cluster to use. The VPC uses an endpoint that references the route tables for each subnet to improve communication with the registry that is hosted in S3.</td></tr><tr><td align="center">Public subnets</td><td align="center"><code dir="auto">AWS::EC2::Subnet</code>      <code dir="auto">AWS::EC2::SubnetNetworkAclAssociation</code></td><td align="center">Your VPC must have public subnets for between 1 and 3 availability zones and associate them with appropriate Ingress rules.</td></tr><tr><td align="center">Internet gateway</td><td align="center"><code dir="auto">AWS::EC2::InternetGateway</code>      <code dir="auto">AWS::EC2::VPCGatewayAttachment</code>      <code dir="auto">AWS::EC2::RouteTable</code>      <code dir="auto">AWS::EC2::Route</code>      <code dir="auto">AWS::EC2::SubnetRouteTableAssociation</code>      <code dir="auto">AWS::EC2::NatGateway</code>      <code dir="auto">AWS::EC2::EIP</code></td><td align="center">You must have a public internet gateway, with public routes, attached  to the VPC. In the provided templates, each public subnet has a NAT gateway  with an EIP address. These NAT gateways allow cluster resources, like  private subnet instances, to reach the internet and are not required for  some restricted network or proxy scenarios.</td></tr><tr><td align="center">Network access control</td><td align="center"><code dir="auto">AWS::EC2::NetworkAcl</code>      <code dir="auto">AWS::EC2::NetworkAclEntry</code></td><td align="center">Required Ports: 80, 443, 22, 1024-65535, 0-65535</td></tr><tr><td align="center">Private subnets</td><td align="center"><code dir="auto">AWS::EC2::Subnet</code>      <code dir="auto">AWS::EC2::RouteTable</code>      <code dir="auto">AWS::EC2::SubnetRouteTableAssociation</code></td><td align="center">Your VPC can have private subnets. The provided CloudFormation templates can create private subnets for between 1 and 3 availability zones. If you use private subnets, you must provide appropriate routes and tables for them.</td></tr></tbody></table>
+<h4 id="required-dns-and-load-balancing-components">Required DNS and load balancing components</h4>
+<p>Your DNS and load balancer configuration needs to use a public hosted zone and can use a private hosted zone similar to the one that the installation program uses if it provisions the cluster’s infrastructure. You must create a DNS entry that resolves to your load balancer. An entry for api.<code dir="auto">cluster_name</code>.<code dir="auto">domain</code> must point to the external load balancer, and an entry for api-int.<code dir="auto">cluster_name</code>.<code dir="auto">domain</code> must point to the internal load balancer.</p>
+<p>The cluster also requires load balancers and listeners for port 6443, which are required for the Kubernetes API and its extensions, and port 22623, which are required for the Ignition config files for new machines. The targets will be the control plane nodes. Port 6443 must be accessible to both clients external to the cluster and nodes within the cluster. Port 22623 must be accessible to nodes within the cluster.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="center">Component</th><th align="center">AWS type</th><th align="center">Description</th></tr></thead><tbody><tr><td align="center">DNS</td><td align="center"><code dir="auto">AWS::Route53::HostedZone</code></td><td align="center">The hosted zone for your internal DNS.</td></tr><tr><td align="center">Public load balancer</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::LoadBalancer</code></td><td align="center">The load balancer for your public subnets.</td></tr><tr><td align="center">External API server record</td><td align="center"><code dir="auto">AWS::Route53::RecordSetGroup</code></td><td align="center">Alias records for the external API server.</td></tr><tr><td align="center">External listener</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::Listener</code></td><td align="center">A listener on port 6443 for the external load balancer.</td></tr><tr><td align="center">External target group</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::TargetGroup</code></td><td align="center">The target group for the external load balancer.</td></tr><tr><td align="center">Private load balancer</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::LoadBalancer</code></td><td align="center">The load balancer for your private subnets.</td></tr><tr><td align="center">Internal API server record</td><td align="center"><code dir="auto">AWS::Route53::RecordSetGroup</code></td><td align="center">Alias records for the internal API server.</td></tr><tr><td align="center">Internal listener</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::Listener</code></td><td align="center">A listener on port 22623 for the internal load balancer.</td></tr><tr><td align="center">Internal target group</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::TargetGroup</code></td><td align="center">The target group for the internal load balancer.</td></tr><tr><td align="center">Internal listener</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::Listener</code></td><td align="center">A listener on port 6443 for the internal load balancer.</td></tr><tr><td align="center">Internal target group</td><td align="center"><code dir="auto">AWS::ElasticLoadBalancingV2::TargetGroup</code></td><td align="center">The target group for the internal load balancer.</td></tr></tbody></table>
+<h4 id="required-security-groups">Required Security groups</h4>
+<p>The control plane and worker machines require access to the following ports:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="center">Group</th><th align="center">Type</th><th align="center">IP Protocol</th><th align="center">Port range</th></tr></thead><tbody><tr><td align="center">MasterSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">6443</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22623</td></tr><tr><td align="center">WorkerSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center">BootstrapSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">19531</td></tr></tbody></table>
+<h4 id="control-plane-ingress">Control plane Ingress</h4>
+<p>The control plane machines require the following Ingress groups. Each Ingress group is a <code dir="auto">AWS::EC2::SecurityGroupIngress</code> resource.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="center">Group</th><th align="center">Type</th><th align="center">IP Protocol</th><th align="center">Port range</th></tr></thead><tbody><tr><td align="center">MasterSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">6443</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22623</td></tr><tr><td align="center">WorkerSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center">BootstrapSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">19531</td></tr></tbody></table>
+<h4 id="worker-ingress">Worker Ingress</h4>
+<p>The worker machines require the following Ingress groups. Each Ingress group is a <code dir="auto">AWS::EC2::SecurityGroupIngress</code> resource.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="center">Group</th><th align="center">Type</th><th align="center">IP Protocol</th><th align="center">Port range</th></tr></thead><tbody><tr><td align="center">MasterSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">6443</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22623</td></tr><tr><td align="center">WorkerSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">icmp</td><td align="center">0</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center">BootstrapSecurityGroup</td><td align="center"><code dir="auto">AWS::EC2::SecurityGroup</code></td><td align="center">tcp</td><td align="center">22</td></tr><tr><td align="center"></td><td align="center"></td><td align="center">tcp</td><td align="center">19531</td></tr></tbody></table>
+<h4 id="cluster-machines">Cluster machines</h4>
+<p>You need <code dir="auto">AWS::EC2::Instance</code> objects for the following machines:</p>
+<ul>
+<li>A bootstrap machine. This machine is required during installation, but you can remove it after your cluster deploys.</li>
+<li>Three control plane machines. The control plane machines are not governed by a control plane machine set.</li>
+<li>Compute machines. You must create at least two compute machines, which are also known as worker machines, during installation. These machines are not governed by a compute machine set.</li>
+</ul>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>For more information on OCP on AWS, see <a href="https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-user-infra.html">https://docs.openshift.com/container-platform/4.15/installing/installing_aws/installing-aws-user-infra.html</a>
+The “Minimum requirements” section does not consider the watsonx.ai and related services, and is accounted for in this documentation</p></section></aside>
+<h3 id="parameters-for-cloudformation-template">Parameters for CloudFormation Template</h3>
+<p>The following parameters must be gathered from the AWS infrastructure in order to use the CloudFormation template:</p>
+<ul>
+<li>BootNodeAccessCIDR:</li>
+<li>vpc_id:</li>
+<li>aws_region:
+<ul>
+<li>Example: <code dir="auto">us-east-2</code></li>
+</ul>
+</li>
+<li>machine_cidr:
+<ul>
+<li>Example: <code dir="auto">10.2.1.0/24</code></li>
+</ul>
+</li>
+<li>openshift_cluster_network_cidr:
+<ul>
+<li>Example: <code dir="auto">10.128.0.0/14</code></li>
+</ul>
+</li>
+<li>subnet_ids:
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>For subnets, at least one set of 3 (Public or Private) subnets must be used.</p></section></aside>
+<ul>
+<li>Public
+<ul>
+<li>Public subnet1</li>
+<li>Public subnet2</li>
+<li>Public subnet3</li>
+</ul>
+</li>
+<li>Private
+<ul>
+<li>Private subnet1</li>
+<li>Private subnet2</li>
+<li>Private subnet3</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>hosted_zone_id:
+<ul>
+<li>Example: <code dir="auto">Hosted_Zone_Id</code></li>
+</ul>
+</li>
+<li>image_registry:</li>
+<li>name: Registy</li>
+<li>registry_host_name:
+<ul>
+<li>Example: <code dir="auto">registry.example.com</code></li>
+</ul>
+</li>
+<li>registry_port:
+<ul>
+<li>Example: <code dir="auto">5000</code></li>
+</ul>
+</li>
+<li>registry_insecure:
+<ul>
+<li>Example: <code dir="auto">false</code></li>
+</ul>
+</li>
+<li>registry_trusted_ca_secret:
+<ul>
+<li>Example: <code dir="auto">cpd463-ca-bundle</code></li>
+</ul>
+</li>
+<li>http_proxy:</li>
+<li>https_proxy:</li>
+<li>no_proxy:</li>
+<li>KeyPairName:
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>Key Pair generation instructions <a href="../10-preparation/#create-aws-keypair">here</a></p></section></aside>
+</li>
+<li>RedhatPullSecret:
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>RedHat Pull Secret instructions <a href="../10-preparation#obtain-redhat-pull-secret">here</a></p></section></aside>
+</li>
+<li>DomainName:</li>
+<li>ClusterName:</li>
+</ul> </div> <footer class="sl-flex astro-3yyafb3n"> <div class="meta sl-flex astro-3yyafb3n">   </div> <div class="pagination-links astro-u2l5gyhi" dir="ltr"> <a href="/engineering-journal-quantum-safe/qse/02_scanning/" rel="prev" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg>  <span class="astro-u2l5gyhi"> Previous <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Scanning</span> </span> </a> <a href="/engineering-journal-quantum-safe/guardium_insights/ec2/10-preparation/" rel="next" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg>  <span class="astro-u2l5gyhi"> Next <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Preparation</span> </span> </a> </div>   </footer>  </div> </div>   </main> </div> </div>  </div> </div>  </body></html>
