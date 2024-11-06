@@ -35,6 +35,9 @@ export default defineConfig({
           directory: 'how-we-work'
         }
       },{
+        label: 'Overview',
+        link: 'overview'
+      },{
         label: 'QSR',
         items: [
           {

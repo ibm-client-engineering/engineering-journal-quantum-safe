@@ -7,7 +7,7 @@ spec:
   match:
     kinds:
       - apiGroups: [""]
-        kinds: ["Pod"]
+        kinds: ["Pod", "Deployment"]
     namespaces:
       - "gatekeeper-system"
   parameters:

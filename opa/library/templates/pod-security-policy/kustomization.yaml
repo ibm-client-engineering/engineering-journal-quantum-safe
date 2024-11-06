@@ -11,6 +11,7 @@ resources:
 - host-network-ports
 - privileged-containers
 - read-only-root-filesystem
+- required-security-context
 - seccomp
 - users
 - volumes
