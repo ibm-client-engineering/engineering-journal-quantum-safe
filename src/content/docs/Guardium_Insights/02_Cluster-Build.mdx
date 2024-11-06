@@ -1312,13 +1312,30 @@ operandrequest.operator.ibm.com/common-service unchanged
 
 Run the following `ibm-pak` command to install the Foundational Services catalogs
 
+:::note[Private Registries for Catalog Sources]
+
+This assumes you've mirrored all required GI and CPFS images to your private registry.
+
+Set the following vars:
+
+```tsx
+export ARGS="--registry your.private.reg --recursive --inputDir ${LOCAL_CASE_DIR}"
+```
+
+Else set it to
+```tsx
+export ARGS="--registry icr.io --recursive --inputDir ${LOCAL_CASE_DIR}"
+```
+
+:::
+
 ```tsx
 oc ibm-pak launch $CASE_NAME \
    --version $CASE_VERSION \
    --action install-catalog \
    --inventory $ICS_INVENTORY_SETUP \
    --namespace $NAMESPACE \
-   --args "--registry icr.io --recursive --inputDir ${LOCAL_CASE_DIR}"
+   --args "${ARGS}"
 ```
 {/*
 Let's patch the commonservices cr to accept the license
@@ -1329,13 +1346,30 @@ kubectl patch commonservices common-service --type merge -p '{"spec":{"license":
 */}
 Now run the following `ibm-pak` command to install the Foundational Services operators
 
+:::note[Private Registries for Foundational Services Operators]
+
+This assumes you've mirrored all required GI and CPFS images to your private registry.
+
+Set the following vars:
+
+```tsx
+export ARGS="--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry your.private.reg --user yourprivreguser --pass yourprivateregpass --secret yoursecretkey --recursive --inputDir ${LOCAL_CASE_DIR}"
+```
+
+Else set it this to use the public and entitled registries:
+```tsx
+export ARGS="--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry cp.icr.io --user ${CP_REPO_USER} --pass ${CP_REPO_PASS} --secret ibm-entitlement-key --recursive --inputDir ${LOCAL_CASE_DIR}"
+```
+
+:::
+
 ```tsx
 oc ibm-pak launch $CASE_NAME \
    --version $CASE_VERSION \
    --action install-operator \
    --inventory $ICS_INVENTORY_SETUP \
    --namespace $NAMESPACE \
-   --args "--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry cp.icr.io --user ${CP_REPO_USER} --pass ${CP_REPO_PASS} --secret ibm-entitlement-key --recursive --inputDir ${LOCAL_CASE_DIR}"
+   --args "$ARGS"
 ```
 
 :::note
@@ -1598,4 +1632,5 @@ kubectl get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_passw
 
 This will return the password for the `cpadmin` user. You can then use `cpadmin` to login.
 
-![Webui](../../../assets/images/webui01.png)
+![Webui](../../../assets/images/webui01.png)import { TabItem, Tabs } from '@astrojs/starlight/components';
+
