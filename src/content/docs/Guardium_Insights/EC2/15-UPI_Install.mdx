@@ -1,0 +1,747 @@
+---
+title: OpenShift Installation
+description: Running Guardium Insights with QSPM on EC2
+sidebar:
+  label: OpenShift
+  order: 3
+---
+
+### Prepare the Bastion Node
+
+
+#### Update the OS and install additional tools
+
+```
+sudo yum update -y; sudo yum install git -y
+```
+
+
+
+#### Clone the repository to the bootnode.
+
+
+```
+git clone https://github.com/ibm-client-engineering/engineering-journal-quantum-safe
+```
+
+
+#### Run 'setup_bastion' script
+
+Run the 'setup_bastion' script which will install additional tools, and configure an HTTP server to host the Bootstrap ignition file.
+
+```
+cd $HOME/aws-openshift410-cloudformation-noIAM-noR53/utils
+./setup_bastion.sh
+```
+
+#### Change the bootnode hostname to 'registry.$DOMAIN'
+
+```
+sudo hostnamectl set-hostname registry.$DOMAIN.com
+sudo reboot
+```
+
+
+### Setup Services
+
+#### Create Registry
+
+Create a new directory for the registry, select a port (suggested port: 5000), a username and a password.
+
+```
+sudo mkdir -p /ibm/
+sudo chown -R ec2-user:ec2-user /ibm/
+./create_registry.sh <registry_directory> <port> <userid> <password> <local_dir_install>
+```
+
+Example:
+
+```
+./create_registry.sh /ibm 5000 wxai CeFsm2024 /home/ec2-user/openshift-upi-master/aws-openshift410-cloudformation-noIAM-noR53
+```
+
+#### Start the registry
+
+```
+./start_registry.sh <registry_directory> <port>
+```
+
+Example:
+
+```
+./start_registry.sh /ibm 5000
+```
+
+#### Add your local registry login details 
+
+```
+mkdir -p /ibm/security/auth/
+```
+
+```
+echo -n '<user_name>:<password>' | base64 -w0 
+```
+
+#### Add your details to the auth.json
+
+```
+{
+  "auths": {
+    "<mirror_registry>": { 
+      "auth": "<credentials>", 
+      "email": "you@example.com"
+    }
+  }
+}
+```
+
+```
+<mirror_registry> - the URL of the registry including the port
+<credentials> - the output from "echo -n '<user_name>:<password>' | base64 -w0 "
+```
+
+Confirm the registry is accessible:
+
+```
+podman login <Registry_URL> --authfile /ibm/security/auth/auth.json
+```
+### Setup Local and Internal registries
+
+#### Load the registry with the OCP files
+```
+./load_ocp.sh <ocprelease> <registryip:port> <contentpath> <authfile>
+```
+
+Example: 
+
+```
+./load_ocp.sh 4.14.9 registry.cpdu8vscs.ibmworkshops.com:5000 /ibm/openshift-4.14.9/export /ibm/openshift/auth.json
+```
+
+```
+export OCP_RELEASE="4.14.9"
+
+export LOCAL_REGISTRY="registry.cpdu8vscs.ibmworkshops.com:5000"
+
+export LOCAL_REPOSITORY="openshift"
+
+export PRODUCT_REPO="openshift-release-dev"
+
+export RELEASE_NAME="ocp-release"
+
+export ARCHITECTURE="x86_64"
+
+export REMOVABLE_MEDIA_PATH="/ibm/ocp-images"
+
+export LOCAL_SECRET_JSON="/ibm/openshift/auth.json"
+
+
+```
+
+Review images and configurations
+
+```
+oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --dry-run
+```
+
+
+Pull down images and send to local registry.
+
+```
+oc image mirror -a ${LOCAL_SECRET_JSON} --from-dir=${REMOVABLE_MEDIA_PATH}/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} 
+```
+
+
+#### Extract the OpenShift Installer 
+Generate the openshift-install binary for the version of openshift images that were pulled.
+
+```
+oc adm release extract -a ${LOCAL_SECRET_JSON} --command=openshift-install "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}"
+```
+
+Move openshift-install to /usr/bin.
+
+```
+sudo mv openshift-install /usr/bin/openshift-install
+```
+
+### Start cluster creation
+
+#### Collect information for 'config.sh'
+
+Information needed to update 'config.sh'
+
+```
+Cluster Name
+Base Domain
+Registry URL
+Local Pull Secret updated with local registry auth.
+Additional Trust certs generated during the registry creation process.
+AWS Region
+AWS Private Subnets
+AWS VPC ID
+AWS VPC CIDR
+AWS RHCOS AMI ID
+
+Bootstrap allowed SSH CIDR
+Bootstrap Ignition URL (Bastion node's hostname, port, and file name)
+Master Instance Type
+Worker Count
+Worker Instance Type
+```
+
+****Important Node: AWS CLI will need to be configured, and output format MUST be json
+
+#### Start the installation
+
+After updating config.sh, run "create_cluster_step_1.sh".
+
+```
+./create_cluster_step_1.sh
+```
+
+Once this completes, create the DNS records listed in the script output:
+
+```
+api.{ClusterName}.{DOMAINNAME} -> wxai-int-(random_string).elb.us-east-2.amazonaws.com
+api-int.{ClusterName}.{DOMAINNAME} -> wxai-int-(random_string).elb.us-east-2.amazonaws.com
+*.apps.{ClusterName}.{DOMAINNAME} -> wxai-int-(random_string).elb.us-east-2.amazonaws.com
+```
+
+Now run step 2:
+
+```
+./create_cluster_step_2.sh
+```
+
+## NFS Provisioner setup
+
+:::note
+In a user managed instance of OCP on AWS, the EFS provisioner from AWS is not available. In our case we will be provisioning an EFS share, and then installing the NFS provioner to the cluster.2a
+:::
+
+### Creating the EFS filesystem
+
+Create an AWS Elastic File System with the following commands:
+
+```
+export CREATION_TOKEN='ibm-wxai-token'
+aws efs create-file-system --creation-token ${CREATION_TOKEN} --encrypted --backup --performance-mode generalPurpose --throughput-mode elastic --region us-east-2 --tags Key=key,Value=value Key=key1,Value=value1
+```
+
+Set the Subnet IDs and Worker Security Group ID variables:
+
+```
+export SUBNET_ID_1="US-EAST-2a Subnet ID"
+export SUBNET_ID_2="US-EAST-2b Subnet ID"
+export SUBNET_ID_3="US-EAST-2c Subnet ID"
+export WORKER_SG="Worker Security Group ID"
+export EFS_ID=$(aws efs describe-file-systems --creation-token ${CREATION_TOKEN} | jq '.FileSystems[] | ."FileSystemId"'| tr -d '"')
+```
+
+#### Create mount targets:
+
+Run the following commands to create mount targets that include the three subnets used by the worker nodes:
+
+```
+aws efs create-mount-target --file-system-id ${EFS_ID} --subnet-id  ${SUBNET_ID_1} --security-group ${WORKER_SG_ID} --region us-east-2
+aws efs create-mount-target --file-system-id ${EFS_ID} --subnet-id  ${SUBNET_ID_2} --security-group ${WORKER_SG_ID} --region us-east-2
+aws efs create-mount-target --file-system-id ${EFS_ID} --subnet-id  ${SUBNET_ID_3} --security-group ${WORKER_SG_ID} --region us-east-2
+```
+
+### Deploying the provisioner with a yaml 
+
+#### Download nfs-provisioner.yml
+Download the nfs-provisioner.yml file from here:
+
+https://raw.githubusercontent.com/ibm-client-engineering/engineering-journal-quantum-safe/main/public/scripts/nfs_provisioner.yml
+
+Confirm that the “EFS_ID” is properly set from the previous step:
+
+```
+echo $EFS_ID
+```
+
+Then update the ‘nfs_provisioner.yml’ to use the new EFS ID:
+
+```
+sed -i "s/EFS_ID/${EFS_ID}/g" nfs_provisioner.yml
+```
+
+#### Apply nfs_provisioner.yml
+Now create the nfs_provisioner in the cluster:
+
+``` 
+oc create -f nfs_provisioner.yml
+```
+
+### Deploying the provisioner with helm
+
+#### Installing helm
+
+Verify and/or install openssl
+
+```tsx
+sudo dnf -y install openssl
+```
+
+Run the following commands to install helm to the bastion host
+```tsx
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod +x get_helm.sh
+./get_helm.sh
+
+Downloading https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
+Verifying checksum... Done.
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+```
+
+Verify helm is available
+
+```tsx
+helm
+
+The Kubernetes package manager
+
+Common actions for Helm:
+
+- helm search:    search for charts
+- helm pull:      download a chart to your local directory to view
+- helm install:   upload the chart to Kubernetes
+- helm list:      list releases of charts
+
+Environment variables:
+
+| Name                               | Description                                                                                                |
+|------------------------------------|------------------------------------------------------------------------------------------------------------|
+| $HELM_CACHE_HOME                   | set an alternative location for storing cached files.                                                      |
+| $HELM_CONFIG_HOME                  | set an alternative location for storing Helm configuration.                                                |
+| $HELM_DATA_HOME                    | set an alternative location for storing Helm data.                                                         |
+| $HELM_DEBUG                        | indicate whether or not Helm is running in Debug mode                                                      |
+| $HELM_DRIVER                       | set the backend storage driver. Values are: configmap, secret, memory, sql.                                |
+| $HELM_DRIVER_SQL_CONNECTION_STRING | set the connection string the SQL storage driver should use.                                               |
+| $HELM_MAX_HISTORY                  | set the maximum number of helm release history.                                                            |
+| $HELM_NAMESPACE                    | set the namespace used for the helm operations.                                                            |
+| $HELM_NO_PLUGINS                   | disable plugins. Set HELM_NO_PLUGINS=1 to disable plugins.                                                 |
+| $HELM_PLUGINS                      | set the path to the plugins directory                                                                      |
+| $HELM_REGISTRY_CONFIG              | set the path to the registry config file.                                                                  |
+| $HELM_REPOSITORY_CACHE             | set the path to the repository cache directory                                                             |
+| $HELM_REPOSITORY_CONFIG            | set the path to the repositories file.                                                                     |
+| $KUBECONFIG                        | set an alternative Kubernetes configuration file (default "~/.kube/config")                                |
+| $HELM_KUBEAPISERVER                | set the Kubernetes API Server Endpoint for authentication                                                  |
+| $HELM_KUBECAFILE                   | set the Kubernetes certificate authority file.                                                             |
+| $HELM_KUBEASGROUPS                 | set the Groups to use for impersonation using a comma-separated list.                                      |
+| $HELM_KUBEASUSER                   | set the Username to impersonate for the operation.                                                         |
+| $HELM_KUBECONTEXT                  | set the name of the kubeconfig context.                                                                    |
+| $HELM_KUBETOKEN                    | set the Bearer KubeToken used for authentication.                                                          |
+| $HELM_KUBEINSECURE_SKIP_TLS_VERIFY | indicate if the Kubernetes API server's certificate validation should be skipped (insecure)                |
+| $HELM_KUBETLS_SERVER_NAME          | set the server name used to validate the Kubernetes API server certificate                                 |
+| $HELM_BURST_LIMIT                  | set the default burst limit in the case the server contains many CRDs (default 100, -1 to disable)         |
+| $HELM_QPS                          | set the Queries Per Second in cases where a high number of calls exceed the option for higher burst values |
+
+Helm stores cache, configuration, and data based on the following configuration order:
+
+- If a HELM_*_HOME environment variable is set, it will be used
+- Otherwise, on systems supporting the XDG base directory specification, the XDG variables will be used
+- When no other location is set a default location will be used based on the operating system
+
+By default, the default directories depend on the Operating System. The defaults are listed below:
+
+| Operating System | Cache Path                | Configuration Path             | Data Path               |
+|------------------|---------------------------|--------------------------------|-------------------------|
+| Linux            | $HOME/.cache/helm         | $HOME/.config/helm             | $HOME/.local/share/helm |
+| macOS            | $HOME/Library/Caches/helm | $HOME/Library/Preferences/helm | $HOME/Library/helm      |
+| Windows          | %TEMP%\helm               | %APPDATA%\helm                 | %APPDATA%\helm          |
+
+Usage:
+  helm [command]
+
+Available Commands:
+  completion  generate autocompletion scripts for the specified shell
+  create      create a new chart with the given name
+  dependency  manage a chart's dependencies
+  env         helm client environment information
+  get         download extended information of a named release
+  help        Help about any command
+  history     fetch release history
+  install     install a chart
+  lint        examine a chart for possible issues
+  list        list releases
+  package     package a chart directory into a chart archive
+  plugin      install, list, or uninstall Helm plugins
+  pull        download a chart from a repository and (optionally) unpack it in local directory
+  push        push a chart to remote
+  registry    login to or logout from a registry
+  repo        add, list, remove, update, and index chart repositories
+  rollback    roll back a release to a previous revision
+  search      search for a keyword in charts
+  show        show information of a chart
+  status      display the status of the named release
+  template    locally render templates
+  test        run tests for a release
+  uninstall   uninstall a release
+  upgrade     upgrade a release
+  verify      verify that a chart at the given path has been signed and is valid
+  version     print the client version information
+
+Flags:
+      --burst-limit int                 client-side default throttling limit (default 100)
+      --debug                           enable verbose output
+  -h, --help                            help for helm
+      --kube-apiserver string           the address and the port for the Kubernetes API server
+      --kube-as-group stringArray       group to impersonate for the operation, this flag can be repeated to specify multiple groups.
+      --kube-as-user string             username to impersonate for the operation
+      --kube-ca-file string             the certificate authority file for the Kubernetes API server connection
+      --kube-context string             name of the kubeconfig context to use
+      --kube-insecure-skip-tls-verify   if true, the Kubernetes API server's certificate will not be checked for validity. This will make your HTTPS connections insecure
+      --kube-tls-server-name string     server name to use for Kubernetes API server certificate validation. If it is not provided, the hostname used to contact the server is used
+      --kube-token string               bearer token used for authentication
+      --kubeconfig string               path to the kubeconfig file
+  -n, --namespace string                namespace scope for this request
+      --qps float32                     queries per second used when communicating with the Kubernetes API, not including bursting
+      --registry-config string          path to the registry config file (default "/home/kramerro/.config/helm/registry/config.json")
+      --repository-cache string         path to the file containing cached repository indexes (default "/home/kramerro/.cache/helm/repository")
+      --repository-config string        path to the file containing repository names and URLs (default "/home/kramerro/.config/helm/repositories.yaml")
+
+Use "helm [command] --help" for more information about a command.
+```
+
+### Install to OCP
+
+From the OC cli:
+```tsx
+oc new-project nfs-provisioner
+
+Now using project "nfs-provisioner" on server "https://api.wxai.cpdu8vscs.ibmworkshops.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app rails-postgresql-example
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=registry.k8s.io/e2e-test-images/agnhost:2.43 -- /agnhost serve-hostname
+```
+
+This will automatically put you in that project.
+
+Now set up the SCCs
+
+```tsx
+oc apply -f - <<EOF
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: false
+allowedCapabilities: null
+apiVersion: security.openshift.io/v1
+defaultAddCapabilities: null
+fsGroup:
+  type: RunAsAny
+groups: []
+kind: SecurityContextConstraints
+metadata:
+  annotations:
+    kubernetes.io/description: 'hostmount-anyuid provides all the features of the
+      restricted SCC but allows host mounts and any UID by a pod.  This is primarily
+      used by the persistent volume recycler. WARNING: this SCC allows host file system
+      access as any UID, including UID 0.  Grant with caution.'
+  name: nfs-storage-hostmount-anyuid
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+- MKNOD
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users:
+- system:serviceaccount:nfs-provisioner:nfs-subdir-external-provisioner
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- hostPath
+- nfs
+- persistentVolumeClaim
+- projected
+- secret
+EOF
+```
+
+output:
+```tsx
+securitycontextconstraints.security.openshift.io/nfs-storage-hostmount-anyuid created
+```
+
+### Install the helm chart and run the helm install
+
+The `<EFS URL>` should be returned by the aws cli creation of the EFS storage filesystem.
+
+```tsx
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --namespace nfs-provisioner \
+    --set nfs.server=<EFS URL>\
+    --set nfs.path=/ \
+    --set storageClass.defaultClass=true
+```
+
+Verify the pods are up
+
+```tsx
+oc get pods
+```
+
+_EXAMPLE RETURNED OUTPUT HERE_
+
+Make sure the storage class now exists and is set to default
+
+```tsx
+oc get sc
+```
+
+Verify that the storage will provision with the following test deployment
+
+```tsx
+oc apply -f - <<EOF
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: test-pod
+    image: busybox:stable
+    command:
+      - "/bin/sh"
+    args:
+      - "-c"
+      - "touch /mnt/SUCCESS && exit 0 || exit 1"
+    volumeMounts:
+      - name: nfs-pvc
+        mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: nfs-pvc
+      persistentVolumeClaim:
+        claimName: test-claim
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+EOF
+
+```
+
+## Change Cluster Domain
+
+### Generate new self-signed certificate
+
+#### Generate CA certs
+
+```
+openssl genrsa -out ca.key 2048
+
+openssl req -new -x509 -days 365 -key ca.key -subj "/C=CN/ST=GD/L=SZ/O=Acme, Inc./CN=Acme Root CA" -out ca.crt
+
+```
+
+#### Generate Server certs
+
+Generate 'server.csr'
+
+```
+openssl req -newkey rsa:2048 -nodes -keyout server.key -subj "/C=CN/ST=GD/L=SZ/O=Acme, Inc./CN=*.{BASE_DOMAIN}" -out server.csr
+```
+
+Generate 'server.crt'
+
+```
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:*.{BASE_DOMAIN}") -days 365 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt
+```
+
+
+#### Update the cluster:
+
+Create the new secret which will contain the cert and key:
+
+```
+oc create secret tls custom-cert --cert=server.crt --key=server.key -n openshift-config
+```
+
+
+Update the ingress:
+
+```
+oc edit ingresses.config/cluster -o yaml
+```
+
+Add the following under 'spec:'
+
+```
+  componentRoutes:
+  - hostname: console.{NEW_URL}
+    name: console
+    namespace: openshift-console
+    servingCertKeyPairSecret:
+      name: custom-cert
+  - hostname: oauth.{NEW_URL}
+    name: oauth-openshift
+    namespace: openshift-authentication
+    servingCertKeyPairSecret:
+      name: custom-cert
+```
+
+## Increase Primary Disk size on worker nodes:
+
+1) Run the following bash one-liner to increase the primary disk on all worker nodes to 500GB:
+
+```
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,Tags[?Key==`Name`].Value|[0],BlockDeviceMappings[0].Ebs.VolumeId]' --output text | grep worker | awk '{print $3}' | while read volume_id; do aws ec2 modify-volume --volume-id $volume_id --size 500; done
+```
+
+2) Log into the node with following command:
+
+```
+oc debug node/<node_name>
+```
+
+3) Once in the node, run the following:
+
+```
+chroot /host
+```
+
+then:
+
+```
+sudo lsblk
+```
+
+The output should look like this:
+
+```
+# sudo lsblk
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+nvme1n1     259:0    0     1T  0 disk
+nvme0n1     259:1    0   500G  0 disk
+|-nvme0n1p1 259:2    0     1M  0 part
+|-nvme0n1p2 259:3    0   127M  0 part
+|-nvme0n1p3 259:4    0   384M  0 part /boot
+`-nvme0n1p4 259:5    0 239.5G  0 part /var/lib/kubelet/pods/555d6f90-41fd-49d2-8aad-fa7293a924e4/volume-subpaths/app-config-override/wd-discovery-cnm-api/2
+                                      /var/lib/kubelet/pods/57d28f73-d355-4092-8e52-6b6aeec28bd5/volume-subpaths/clouseau-config/search/4
+                                      /var/lib/kubelet/pods/fcb4b5ec-ea1a-42c7-908c-a027cf885ca1/volume-subpaths/db2wh-cm/zen-database-core/1
+                                      /var/lib/kubelet/pods/fcb4b5ec-ea1a-42c7-908c-a027cf885ca1/volume-subpaths/db2oltp-cm/zen-database-core/0
+                                      /var/lib/kubelet/pods/5e35fe3f-7e4d-4729-b3dd-b9553ffd73f6/volume-subpaths/nginx-conf/monitoring-plugin/1
+                                      /var
+                                      /sysroot/ostree/deploy/rhcos/var
+                                      /sysroot
+                                      /usr
+                                      /etc
+                                      /
+
+```
+
+4) Find the part on the disk that you wish to increase, in my case it was 'nvme0n1p4'.
+
+Now we extend the partition, by targeting the disk (Example: /dev/nvme0n1) and the partition (Example: 4)
+
+```
+sudo growpart /dev/nvme0n1 4
+```
+
+5) Check the disk sizes again:
+
+```
+sudo lsblk
+```
+
+This is what my output looks like now:
+
+```
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+nvme1n1     259:0    0     1T  0 disk
+nvme0n1     259:1    0   500G  0 disk
+|-nvme0n1p1 259:2    0     1M  0 part
+|-nvme0n1p2 259:3    0   127M  0 part
+|-nvme0n1p3 259:4    0   384M  0 part /boot
+`-nvme0n1p4 259:5    0 499.5G  0 part /var/lib/kubelet/pods/555d6f90-41fd-49d2-8aad-fa7293a924e4/volume-subpaths/app-config-override/wd-discovery-cnm-api/2
+                                      /var/lib/kubelet/pods/57d28f73-d355-4092-8e52-6b6aeec28bd5/volume-subpaths/clouseau-config/search/4
+                                      /var/lib/kubelet/pods/fcb4b5ec-ea1a-42c7-908c-a027cf885ca1/volume-subpaths/db2wh-cm/zen-database-core/1
+                                      /var/lib/kubelet/pods/fcb4b5ec-ea1a-42c7-908c-a027cf885ca1/volume-subpaths/db2oltp-cm/zen-database-core/0
+                                      /var/lib/kubelet/pods/5e35fe3f-7e4d-4729-b3dd-b9553ffd73f6/volume-subpaths/nginx-conf/monitoring-plugin/1
+                                      /var
+                                      /sysroot/ostree/deploy/rhcos/var
+                                      /sysroot
+                                      /usr
+                                      /etc
+                                      /
+```
+
+6) Last step is to extend the file system:
+
+```
+sudo xfs_growfs -d /
+```
+
+## Add users to OpenShift using HTPassword
+
+### Install HTTP Tools:
+
+```
+yum install httpd-tools
+```
+
+### Create a HTPassword File:
+
+Run the following command to create the HTPassword file that will be used by OpenShift.
+
+```
+htpassword -c <file_name> <username>
+```
+
+After running the command, you will be prompted for a password and then asked to confirm password.
+
+### Create the HTPassword secret:
+
+```
+oc create secret generic htpasswd-secret --from-file=htpasswd=<file_name> -n openshift-config
+```
+
+###
+
+Edit the OpenShift OAuth settings:
+
+```
+oc edit oauth cluster
+```
+
+Then add the following to the file:
+
+```
+spec:
+  identityProviders:
+  - name: my_htpasswd_provider
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd-secret
+```
+
+After this has been added, try opening Openshift in a private browser, and select 'HTPasswd'. Then enter the username and password.
+

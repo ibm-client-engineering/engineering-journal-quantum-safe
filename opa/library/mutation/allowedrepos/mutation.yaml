@@ -13,6 +13,53 @@ spec:
   match:
     source: "All"
     scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "Pod" ]
+---
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignImage
+metadata:
+  name: assign-initcontainer-domain
+spec:
+  applyTo:
+  - groups: [ "" ]
+    kinds: [ "Pod" ]
+    versions: [ "v1" ]
+  location: "spec.initContainers[name:*].image"
+  parameters:
+    assignDomain: "my.registry.io"
+  match:
+    source: "All"
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "Pod" ]
+---
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignImage
+metadata:
+  name: assign-ephemeralcontainer-domain
+spec:
+  applyTo:
+  - groups: [ "" ]
+    kinds: [ "Pod" ]
+    versions: [ "v1" ]
+  location: "spec.ephemeralContainers[name:*].image"
+  parameters:
+    assignDomain: "my.registry.io"
+  match:
+    source: "All"
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
     kinds:
     - apiGroups: [ "*" ]
       kinds: [ "Pod" ]

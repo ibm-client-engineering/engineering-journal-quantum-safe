@@ -2,7 +2,7 @@
 title: EKS Cluster build
 description: Running Guardium Insights with QSPM on EKS
 sidebar:
-  label: Cluster Build
+  label: EKS Cluster Build
   order: 2
 ---
 
@@ -29,7 +29,10 @@ Run the `eksctl` command below to create your first cluster and perform the foll
 -   Create a node group with the name `guardium-workers` and select a machine type for the `guardium-workers` node group.
 
 :::caution[Multiple AZ support]
-As of this writing, GI v3.4.0 does not support multiple availability zones. 
+As of this writing, GI v3.5.0 does not officially support multiple availability zones.
+This is due to the fact that DB2 will not run across multiple availability zones. The rest of the
+product will run across zones but because DB2 will not, true availability will not be achieved with
+multiple availability zones.
 :::
 
 ## Creating the cluster
@@ -1598,4 +1601,4 @@ kubectl get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_passw
 
 This will return the password for the `cpadmin` user. You can then use `cpadmin` to login.
 
-![Webui](../../../assets/images/webui01.png)
+![Webui](../../../../assets/images/webui01.png)
