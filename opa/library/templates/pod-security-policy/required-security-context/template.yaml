@@ -1,0 +1,29 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredsecuritycontext
+  annotations:
+    metadata.gatekeeper.sh/title: "Required securityContext"
+    metadata.gatekeeper.sh/version: 1.1.2
+    description: >-
+      Requires resources to contain securityContext.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredSecurityContext
+      validation:
+        openAPIV3Schema:
+          type: object
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      code:
+      - engine: Rego
+        source:
+          rego: |
+            package k8srequiredsecuritycontext
+
+            violation[{"msg": msg}] {
+              not input.review.object.spec.securityContext
+              msg := "you must provide securityContext on pod"
+            }
