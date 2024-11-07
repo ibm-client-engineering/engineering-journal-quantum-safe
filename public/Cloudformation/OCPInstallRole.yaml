@@ -1,5 +1,4 @@
 AWSTemplateFormatVersion: '2010-09-09'
-<<<<<<< adam-updates
 Description: 'CloudFormation Template to create two IAM Roles with permissions and trust relationships.'
 
 Resources:
