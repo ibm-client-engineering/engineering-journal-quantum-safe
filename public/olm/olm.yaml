@@ -142,12 +142,17 @@ rules:
     - certificaterequests
     - orders
     - challenges
-    - issuers    
+    - issuers
+    - clusterissuers
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"] 
 - apiGroups: ["certmanager.k8s.io"] 
   resources: 
     - certificates
-  verbs: ["delete", "get", "list", "watch"] 
+  verbs: ["delete", "get", "list", "watch"]
+- apiGroups: ["acme.cert-manager.io"]
+  resources:
+    - orders
+  verbs: ["get","list","watch"]
 - nonResourceURLs:
   - "/healthz"
   - "/readyz"
