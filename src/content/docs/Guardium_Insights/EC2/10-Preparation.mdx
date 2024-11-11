@@ -59,6 +59,10 @@ aws s3api put-object --bucket $BUCKET --key "pull-secrets" --region us-east-1
 aws s3 cp pull-secret.json s3://$BUCKET/pull-secrets/pull-secret.json
 ```
 
+
+
+
+
 ### Create AWS KeyPair
 
 The following commands create the KeyPair, outputs the file to the default ssh folder. The second command modifies the permissions of the file.
@@ -108,8 +112,125 @@ aws cloudformation deploy --stack-name LambdaExecutionRole -template-file Lambda
 ```
 
 
-### Deply cloudformation template using AWS CLI
+### Deply cloudformation templates using AWS CLI
+
+If you're creating a new VPC
+
+```bash
+export region=us-east-2 # This should be whatever region you are deploying in
+export CLUSTERNAME=GI-OCP # This should be whatever you want to call your cluster
+```
+
+Download the following file:
+
+[vpc-template.yaml](https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/scripts/Install-OCP-UPI/cloudformation/vpc-template.yaml)
+
+Create a file called `vpc-params.json`
+
+```tsx
+cat << EOF > vpc-params.json
+[
+  {
+    "ParameterKey": "ClusterName", 
+    "ParameterValue": "${CLUSTERNAME}" 
+  },
+  {
+    "ParameterKey": "AvailabilityZones", 
+    "ParameterValue": "${region}a,${region}b,${region}c"
+  },
+  {
+    "ParameterKey": "CreateNATGateways", 
+    "ParameterValue": "true" 
+  },
+  {
+    "ParameterKey": "CreatePublicSubnets", 
+    "ParameterValue": "true" 
+  },
+  {
+    "ParameterKey": "CreatePrivateSubnets", 
+    "ParameterValue": "true" 
+  },
+  {
+    "ParameterKey": "NumberOfAZs",
+    "ParameterValue": "3"
+  },
+  {
+    "ParameterKey": "PrivateSubnet1CIDR",
+    "ParameterValue": "192.168.0.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet2CIDR",
+    "ParameterValue": "192.168.32.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet3CIDR",
+    "ParameterValue": "192.168.64.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet1Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-private-subnet-1"
+  },
+  {
+    "ParameterKey": "PrivateSubnet2Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-private-subnet-2"
+  },
+  {
+    "ParameterKey": "PrivateSubnet3Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-private-subnet-3"
+  },
+  {
+    "ParameterKey": "PublicSubnet1CIDR",
+    "ParameterValue": "192.168.96.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet1Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-public-subnet-1"
+  },
+  {
+    "ParameterKey": "PublicSubnet2CIDR",
+    "ParameterValue": "192.168.104.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet2Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-public-subnet-2"
+  },
+  {
+    "ParameterKey": "PublicSubnet3CIDR",
+    "ParameterValue": "192.168.112.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet3Tag1",
+    "ParameterValue": "Name=${CLUSTERNAME}-public-subnet-3"
+  },
+  {
+    "ParameterKey": "VPCCIDR",
+    "ParameterValue": "192.168.0.0/16"
+  },
+  {
+    "ParameterKey": "VPCDNSNameResolution",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "VPCDNSNameCreation",
+    "ParameterValue": "true"
+  }
+]
+EOF
+```
+
+Using the OCPInstall role arn, run the following command to create the VPC:
+
+```tsx
+aws cloudformation create-stack \
+--stack-name ${CLUSTERNAME} \
+--template-body file://vpc-template.yaml \
+--parameters file://vpc-params.json
+```
+
+
 Using the OCPInstall role arn, run the following command to start the main cloudformation deployment:
+
+
 
 ```
 aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yaml --parameter-overrides file://parameters-override.json --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
