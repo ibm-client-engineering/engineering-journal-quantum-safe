@@ -37,15 +37,15 @@
     },
     {
         "ParameterKey": "Redhat-Pull-Secret",
-        "ParameterValue": "s3//cp4d-ocp-cloudformation-dev1/pull-secrets/pull-secrets.json"
+        "ParameterValue": "s3://bucket-fidelity-20241107/pull-secrets/pull-secret.json"
     },
     {
         "ParameterKey": "VPCID",
         "ParameterValue": "REPLACE_ME"
     },
     {
-        "ParameterKey": "ICPDDeploymentLogsBucketName",
-        "ParameterValue": "cp4d-ocp-cloudformation-dev"
+        "ParameterKey": "GIDeploymentLogsBucketName",
+        "ParameterValue": "gi-ocp-cloudformation-dev"
     },
     {
         "ParameterKey": "DomainName",
@@ -64,7 +64,7 @@
         "ParameterValue": "4.12.45"
     },
     {
-        "ParameterKey": "CPDExternalRegistry",
+        "ParameterKey": "GIExternalRegistry",
         "ParameterValue": "cp.icr.io"
     },
     {

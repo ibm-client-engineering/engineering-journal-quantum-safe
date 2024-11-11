@@ -37,25 +37,26 @@ aws configure
 ### Redhat pull secret
 
 The Red Hat pull secret must be downloaded from https://console.redhat.com/openshift/downloads#tool-pull-secret. 
-Rename the file from ```pull-secret.txt``` to ```pull_secret.json```
+Rename the file from ```pull-secret.txt``` to ```pull-secret.json```
 
 ### Create s3 bucket
 
 ```
-BUCKET="Bucket_NAME"
+# name must be unique in region
+BUCKET="bucket-name"
 aws s3api create-bucket --bucket $BUCKET --region us-east-1
 ```
 
 ### Create pull-secrets folder in s3 bucket
 
 ```
-aws s3api put-object --bucket $BUCKET --key "pull-secets" --region us-east-1
+aws s3api put-object --bucket $BUCKET --key "pull-secrets" --region us-east-1
 ```
 
-### Upload pull-secrets.json to s3bucket/pull-secrets
+### Upload pull-secret.json to s3bucket/pull-secrets
 
 ```
-aws s3 cp pull-secrets.json s3://$BUCKET/pull-secrets/pull-secrets.json
+aws s3 cp pull-secret.json s3://$BUCKET/pull-secrets/pull-secret.json
 ```
 
 ### Create AWS KeyPair
@@ -63,20 +64,21 @@ aws s3 cp pull-secrets.json s3://$BUCKET/pull-secrets/pull-secrets.json
 The following commands create the KeyPair, outputs the file to the default ssh folder. The second command modifies the permissions of the file.
 
 ```
+KEYPAIR_NAME=ec2_ocp
 aws ec2 create-key-pair  --key-name $KEYPAIR_NAME --key-type rsa --key-format pem --query "KeyMaterial" --output text > ~/.ssh/$KEYPAIR_NAME.pem
 chmod 400 ~/.ssh/$KEYPAIR_NAME.pem
 ```
 
-### Preparing the installion files
+### Preparing the Installation Files
 
-The default "AvailabilityZones" in ***clusters.yaml*** are **"us-east-2a,us-east-2b,us-east-2c"** but can be changed.\
-To change which Availability Zones are used, search ***clusters.yaml*** for ```us-east-2a,us-east-2b,us-east-2c``` and replace with the preferred Availability Zones.\
-Search ***clusters.yaml*** for ```REPLACE_ME_WITH_SUBNET_ID``` and replace with a specific subnetID.
+The default "AvailabilityZones" in ***cluster.yml*** are **"us-east-2a,us-east-2b,us-east-2c"** but can be changed.\
+To change which Availability Zones are used, search ***cluster.yml*** for ```us-east-2a,us-east-2b,us-east-2c``` and replace with the preferred Availability Zones.\
+Search ***cluster.yml*** for ```REPLACE_ME_WITH_SUBNET_ID``` and replace with one of the public subnetID. This will be where the bastion host will live.
 
-### Preparing Parameters Override file
+### Preparing Parameters Override File
 
-Review ***"parameters-override.yaml"***, the following changes will need to be made
-- Add API Key
+Review ***parameters-override.yaml***, the following changes will need to be made
+- Add API Key (for accessing cp.icr.io)
 - Add KeyPairName
 - Add Private Subnets
 - Add Public Subnets
@@ -85,7 +87,7 @@ Review ***"parameters-override.yaml"***, the following changes will need to be m
 - Add Bucket Name for s3 bucket that is being used by Red Hat Pull secret
 - Add Domain Name
 - Add Cluster Name
-- Add CPD External Registry
+- Add GI External Registry
 
 ## Deployment Steps
 
