@@ -228,10 +228,14 @@ aws cloudformation create-stack \
 
 Using the OCPInstall role arn, run the following command to start the main cloudformation deployment:
 
-
-
 ```
-aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yaml --parameter-overrides file://parameters-override.json --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
+aws cloudformation deploy \
+--stack-name stack-deployment-1 \
+--template-file cluster.yaml \
+--parameter-overrides file://parameters-override.json \
+--capabilities CAPABILITY_NAMED_IAM \
+--tags *add Key=Value tag here* \
+--role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
 ```
 
 Check the AWS Console to see when the cloudformation template has progressed far enough that the bootnode is online.
