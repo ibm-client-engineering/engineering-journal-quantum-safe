@@ -37,15 +37,15 @@
     },
     {
         "ParameterKey": "Redhat-Pull-Secret",
-        "ParameterValue": "s3//cp4d-ocp-cloudformation-dev1/pull-secrets/pull-secrets.json"
+        "ParameterValue": "s3://bucket-fidelity-20241107/pull-secrets/pull-secret.json"
     },
     {
         "ParameterKey": "VPCID",
         "ParameterValue": "REPLACE_ME"
     },
     {
-        "ParameterKey": "ICPDDeploymentLogsBucketName",
-        "ParameterValue": "cp4d-ocp-cloudformation-dev"
+        "ParameterKey": "GIDeploymentLogsBucketName",
+        "ParameterValue": "gi-ocp-cloudformation-dev"
     },
     {
         "ParameterKey": "DomainName",
@@ -61,55 +61,10 @@
     },
     {
         "ParameterKey": "OpenshiftVersion",
-        "ParameterValue": "4.12.45"
+        "ParameterValue": "4.16.19"
     },
     {
-        "ParameterKey": "CPDExternalRegistry",
+        "ParameterKey": "GIExternalRegistry",
         "ParameterValue": "cp.icr.io"
-    },
-    {
-        "ParameterKey": "FACTSHEET",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonAssistant",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonDiscovery",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "OpenScale",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WKC",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WML",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WSL",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "OPENPAGES",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonxAI",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "IBMGranite13bChatV1",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "MetaLlamaLlamaTwo70bChat",
-        "ParameterValue": "removed"
-
     }
 ]

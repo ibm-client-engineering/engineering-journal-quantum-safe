@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CloudFormation Template to create OCPInstall role needed for OCP installation.'
+Description: 'CloudFormation Template to create two IAM Roles with permissions and trust relationships.'
 
 Resources:
-  OCPInstallRole:
+  BootNodeRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: 'OCPInstall'
+      RoleName: 'BootNodeRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -13,9 +13,14 @@ Resources:
             Principal:
               Service: 'ec2.amazonaws.com'
             Action: 'sts:AssumeRole'
+  DevOpsRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: 'DevOps-Role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
           - Effect: 'Allow'
             Principal:
-              AWS: 
-              - !Sub arn:aws:iam::${AWS::AccountId}:role/BootNodeRole
-              - !Sub arn:aws:iam::${AWS::AccountId}:role/DevOps-Role
+              Service: 'ec2.amazonaws.com'
             Action: 'sts:AssumeRole'

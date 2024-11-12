@@ -210,7 +210,7 @@ Parameters:
   AvailabilityZones:
     Description: The list of Availability Zones to use for the subnets in the VPC. The Template uses one or three Availability Zones and preserves the logical order you specify.
     Type: List<AWS::EC2::AvailabilityZone::Name>
-    Default: us-east-2a,us-east-2b,us-east-2c
+    Default: us-east-1a,us-east-1b,us-east-1c
   NumberOfMaster:
     Default: '3'
     Description: The desired capacity for the OpenShift master instances. Value can either 1 or 3 nodes. 
@@ -585,7 +585,7 @@ Resources:
     Type: 'AWS::IAM::User'
     Properties:
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/OCPInstall
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/OCPInstall
   CPDIAMUserAccessKey:
     Type: 'AWS::IAM::AccessKey'
     Properties:
@@ -783,7 +783,7 @@ Resources:
         AssociatePublicIpAddress: true
         DeviceIndex: '0'
         DeleteOnTermination: true
-        SubnetId: REPLACE_ME_WITH_SUBNET_ID 
+        SubnetId: subnet-05561c46f909d6050
       UserData:
         Fn::Base64:
           !Sub 
@@ -864,43 +864,91 @@ Resources:
 
 
             # copy openshift and CP4D config file to config dir
-            wget https://ibm-aws-immersion-day.s3.us-east-2.amazonaws.com/cloudformation/config/cp4d-480.yaml
-            cp ./cp4d-480.yaml $HOME/cpd-config/config/
+            # wget https://ibm-aws-immersion-day.s3.us-east-2.amazonaws.com/cloudformation/config/cp4d-480.yaml
+            # cp ./cp4d-480.yaml $HOME/cpd-config/config/
 
             # replace parameters in CPD
-            sed -i 's/|CA|/'${CA}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|CDE|/'${CDE}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|DB2|/'${DB2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|DB2U|/'${DB2U}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|DMC|/'${DMC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|DV|/'${DV}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|FACTSHEET|/'${FACTSHEET}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONASSISTANT|/'${WatsonAssistant}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONDISCOVERY|/'${WatsonDiscovery}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONKNOWLEDGESTUDIO|/'${WatsonKnowledgeStudio}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONOPENSCALE|/'${OpenScale}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONSPEECH|/'${WatsonSpeech}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WKC|/'${WKC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WML|/'${WML}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WSL|/'${WSL}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WSP|/'${WSP}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|RSTUDIO|/'${RSTUDIO}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|OPENPAGES|/'${OPENPAGES}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|WATSONXDATA|/'${WatsonxData}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|CA|/'${CA}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|CDE|/'${CDE}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|DB2|/'${DB2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|DB2U|/'${DB2U}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|DMC|/'${DMC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|DV|/'${DV}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|FACTSHEET|/'${FACTSHEET}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONASSISTANT|/'${WatsonAssistant}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONDISCOVERY|/'${WatsonDiscovery}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONKNOWLEDGESTUDIO|/'${WatsonKnowledgeStudio}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONOPENSCALE|/'${OpenScale}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONSPEECH|/'${WatsonSpeech}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WKC|/'${WKC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WML|/'${WML}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WSL|/'${WSL}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WSP|/'${WSP}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|RSTUDIO|/'${RSTUDIO}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|OPENPAGES|/'${OPENPAGES}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|WATSONXDATA|/'${WatsonxData}'/g' $HOME/cpd-config/config/cp4d-480.yaml
 
             # watsonx AI
-            sed -i 's/|WATSONXAI|/'${WatsonxAI}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|GOOGLEFLANT5XXL|/'${GoogleFlanT5Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|GOOGLEFLANUL2|/'${GoogleFlanUl2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|ELEUTHERAIGPTNEOX20B|/'${EleutheraiGptNeox20b}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|IBMGRANITE13BCHATV1|/'${IBMGranite13bChatV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|IBMGRANITE13BINSTRUCTV1|/'${IBMGranite13bInstructV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|METALLAMALLAMA270BCHAT|/'${MetaLlamaLlamaTwo70bChat}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|IBMMPT7BINSTRUCT2|/'${IBMMpt7bInstruct2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|BIGSCIENCEMT0XXL|/'${BigscienceMt0Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            sed -i 's/|BIGCODESTARCODER|/'${BigcodeStarcoder}'/g' $HOME/cpd-config/config/cp4d-480.yaml            
+            # sed -i 's/|WATSONXAI|/'${WatsonxAI}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|GOOGLEFLANT5XXL|/'${GoogleFlanT5Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|GOOGLEFLANUL2|/'${GoogleFlanUl2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|ELEUTHERAIGPTNEOX20B|/'${EleutheraiGptNeox20b}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|IBMGRANITE13BCHATV1|/'${IBMGranite13bChatV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|IBMGRANITE13BINSTRUCTV1|/'${IBMGranite13bInstructV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|METALLAMALLAMA270BCHAT|/'${MetaLlamaLlamaTwo70bChat}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|IBMMPT7BINSTRUCT2|/'${IBMMpt7bInstruct2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|BIGSCIENCEMT0XXL|/'${BigscienceMt0Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
+            # sed -i 's/|BIGCODESTARCODER|/'${BigcodeStarcoder}'/g' $HOME/cpd-config/config/cp4d-480.yaml            
 
-            echo "---" > $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
+            cat >> $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml<< EOF
+            ---
+            global_config:
+              environment_name: sample
+              cloud_platform: aws
+              aws_region: eu-central-1
+              env_id: pluto-01
+              confirm_destroy: False
+
+            nfs_server:
+            - name: "{{ env_id }}-elastic"
+              infrastructure:
+                aws_region: "{{ aws_region }}"
+
+            openshift:
+            - name: "{{ env_id }}"
+              ocp_version: 4.15.22
+              domain_name: example.com
+              control_plane_flavour: m4.xlarge
+              control_plane_nodes: 3
+              compute_flavour: m5.4xlarge
+              compute_nodes: 3
+              infrastructure:
+                type: self-managed
+                aws_region: "{{ aws_region }}"
+                multi_zone: False
+                private_only: False
+                # CIDR of OpenShift nodes when deploying in existing VPC
+                machine_cidr: 10.2.1.0/24
+                # Existing subnets when deploying in existing VPC
+                subnet_ids:
+                - subnet-06bbef28f585a0dd3
+                - subnet-0ea5ac344c0fbadf5
+                hosted_zone_id: Z08291873MCIC4TMIK4UP
+                # Optional attribute if you want to use a different AWS AMI to boot the OpenShift nodes
+                ami_id: ami-09249dd86b1933dd5
+              gpu:
+                install: auto
+              openshift_ai:
+                install: auto
+                channel: auto
+              mcg:
+                install: True
+                storage_type: storage-class
+                storage_class: gp3-csi
+              openshift_storage:
+              - storage_name: "{{ env_id }}-elastic"
+                storage_type: aws-elastic
+            EOF
             yq -i ".global_config.environment_name = \"${ClusterName}\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             yq -i '.global_config.cloud_platform = "aws"' $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             yq -i ".global_config.aws_region = \"${AWS::Region}\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
