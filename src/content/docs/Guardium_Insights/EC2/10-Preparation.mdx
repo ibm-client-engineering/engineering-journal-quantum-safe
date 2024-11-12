@@ -96,11 +96,17 @@ Review ***parameters-override.yaml***, the following changes will need to be mad
 ## Deployment Steps
 
 ### Create OCPInstall Role
-[Download the OCPInstall_Role.yaml](https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/Cloudformation/OCPInstallRole.yaml)
+[Download the OCPInstallRole.yaml](https://ibm-client-engineering.github.io/engineering-journal-quantum-safe/Cloudformation/OCPInstallRole.yaml)
+
+***Note***: This template assumes that roles `BootNodeRole` and `DevOps-Role` already exist.
+- Download DefaultRoles.yaml and apply if needed
+- Edit the OCPInstall role yaml and add account or add substitution and set role names appropriately
+- Set optional tags on the command
+
 Create the role by running the following command:
 
 ```
-aws cloudformation deploy --stack-name OCPInstall-role-1 -template-file OCPInstall_Role.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here*
+aws cloudformation deploy --stack-name OCPInstall-role-1 --template-file OCPInstallRole.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here*
 ```
 
 ### Create LambdaExecution Role
@@ -108,11 +114,11 @@ aws cloudformation deploy --stack-name OCPInstall-role-1 -template-file OCPInsta
 Create the role by running the following command:
 
 ```
-aws cloudformation deploy --stack-name LambdaExecutionRole -template-file LambdaExecutionRole.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here*
+aws cloudformation deploy --stack-name LambdaExecutionRole --template-file LambdaExecutionRole.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here*
 ```
 
 
-### Deply cloudformation templates using AWS CLI
+### Deploy CloudFormation templates using AWS CLI
 
 If you're creating a new VPC
 
@@ -233,7 +239,7 @@ Using the OCPInstall role arn, run the following command to start the main cloud
 
 
 ```
-aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yaml --parameter-overrides file://parameters-override.json --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
+aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yml --parameter-overrides file://parameters-override.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
 ```
 
 Check the AWS Console to see when the cloudformation template has progressed far enough that the bootnode is online.

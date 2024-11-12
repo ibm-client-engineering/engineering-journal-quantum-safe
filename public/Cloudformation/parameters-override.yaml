@@ -61,55 +61,10 @@
     },
     {
         "ParameterKey": "OpenshiftVersion",
-        "ParameterValue": "4.12.45"
+        "ParameterValue": "4.16.19"
     },
     {
         "ParameterKey": "GIExternalRegistry",
         "ParameterValue": "cp.icr.io"
-    },
-    {
-        "ParameterKey": "FACTSHEET",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonAssistant",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonDiscovery",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "OpenScale",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WKC",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WML",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WSL",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "OPENPAGES",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "WatsonxAI",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "IBMGranite13bChatV1",
-        "ParameterValue": "removed"
-    },
-    {
-        "ParameterKey": "MetaLlamaLlamaTwo70bChat",
-        "ParameterValue": "removed"
-
     }
 ]
