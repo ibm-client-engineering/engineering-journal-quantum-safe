@@ -593,3 +593,91 @@ Near the end of the yaml output, you will see violations listed.
     namespace: gatekeeper-system
     version: v1
 ```
+
+## Configure OPA Mutations
+
+:::note
+If you are deploying to an **EKS** environment that is airgapped and using a private registry, the following mutations would need to be configured for the environment. This is not applicable to an Openshift environment as that can use an `ImageContentSourcePolicy`
+
+:::
+
+These mutations essentially work like an Openshift `ImageContentSourcePolicy` and rewrite the domain paths in pods.
+
+Export the registry domain. This should be the url of your private registry. `my.registry.io` is an example.
+
+
+```tsx
+export myprivatereg=my.registry.io
+```
+
+Apply the mutations
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignImage
+metadata:
+  name: assign-container-domain
+spec:
+  applyTo:
+  - groups: [ "" ]
+    kinds: [ "Pod" ]
+    versions: [ "v1" ]
+  location: "spec.containers[name:*].image"
+  parameters:
+    assignDomain: "${myprivatereg}"
+  match:
+    source: "All"
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "Pod" ]
+---
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignImage
+metadata:
+  name: assign-initcontainer-domain
+spec:
+  applyTo:
+  - groups: [ "" ]
+    kinds: [ "Pod" ]
+    versions: [ "v1" ]
+  location: "spec.initContainers[name:*].image"
+  parameters:
+    assignDomain: "${myprivatereg}"
+  match:
+    source: "All"
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "Pod" ]
+---
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignImage
+metadata:
+  name: assign-ephemeralcontainer-domain
+spec:
+  applyTo:
+  - groups: [ "" ]
+    kinds: [ "Pod" ]
+    versions: [ "v1" ]
+  location: "spec.ephemeralContainers[name:*].image"
+  parameters:
+    assignDomain: "${myprivatereg}"
+  match:
+    source: "All"
+    scope: Namespaced
+    namespaces:
+      - openshift-marketplace
+      - ibm-cert-manager
+    kinds:
+    - apiGroups: [ "*" ]
+      kinds: [ "Pod" ]
+EOF
+```
