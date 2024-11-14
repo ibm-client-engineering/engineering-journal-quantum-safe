@@ -236,7 +236,10 @@ aws cloudformation create-stack \
 
 Using the OCPInstall role arn, run the following command to start the main cloudformation deployment:
 
-
+:::tip
+If you are developing, add `--disable-rollback` flag to the following command to disable the automatic rollback and deletion of the bastion node on failures.
+This will allow you to troubleshoot in the event that the stack does not complete successfully.
+:::
 
 ```
 aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yml --parameter-overrides file://parameters-override.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
@@ -363,7 +366,7 @@ aws: error: the following arguments are required: command
 Check what folders exist in the ec2-home directory. if "cpd-status" has not been created yet, then wait a few minutes. Once "cpd-status" directory appears, run the following command:
 
 ```
-tail -f ~/cpd-status/log/cloud-pak-deployer
+tail -f ~/cpd-status/log/cloud-pak-deployer.log
 ```
 
 This command will show the log file from the cp-deployer process. 
