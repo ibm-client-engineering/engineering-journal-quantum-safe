@@ -126,6 +126,48 @@ rules:
   resources: 
     - subjectaccessreviews 
   verbs: ["create", "get"] 
+- apiGroups: ["zen.cpd.ibm.com"]
+  resources: 
+    - zenextensions
+    - zenservices
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["ibmevents.ibm.com"]
+  resources: 
+    - kafkausers
+    - kafkanodepools
+    - kafkabridges
+    - kafkaconnectors
+    - kafkaconnects
+    - kafkarebalances
+    - kafkas
+    - kafkatopics
+    - kafkamirrormaker2s
+    - kafkamirrormakers
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["core.ibmevents.ibm.com"]
+  resources: 
+    - strimzipodsets
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["postgresql.k8s.enterprisedb.io"]
+  resources:
+    - backups
+    - clusters
+    - poolers
+    - scheduledbackups
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["foundation.ibm.com"]
+  resources:
+    - navconfigurations
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["oidc.security.ibm.com"]
+  resources:
+    - clients
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["operators.ibm.com"]
+  resources:
+    - commonwebuis
+    - switcheritems
+  verbs: ["list", "get", "watch"]
 - apiGroups: ["operator.ibm.com"] 
   resources: 
     - authentications
@@ -135,6 +177,12 @@ rules:
     - operandrequests
     - operandrequests/status
     - certmanagerconfigs
+    - operandconfigs
+    - operandconfigs/status
+    - operandregistries
+    - operandregistries/status
+    - operandbindinfos
+    - operandbindinfos/status
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"] 
 - apiGroups: ["cert-manager.io"] 
   resources: 

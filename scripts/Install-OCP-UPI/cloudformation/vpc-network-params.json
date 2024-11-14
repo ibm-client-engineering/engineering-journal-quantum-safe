@@ -1,0 +1,78 @@
+[
+  {
+    "ParameterKey": "ClusterName", 
+    "ParameterValue": "GI-OCP" 
+  },
+  {
+    "ParameterKey": "InfrastructureName", 
+    "ParameterValue": "GI-OCP-infra" 
+  },
+  {
+    "ParameterKey": "AvailabilityZones", 
+    "ParameterValue": "us-east-2a,us-east-2b,us-east-2c"
+  },
+  {
+    "ParameterKey": "HostedZoneName", 
+    "ParameterValue": "frwd-labs.link"
+  },
+  {
+    "ParameterKey": "PrivateSubnet1CIDR",
+    "ParameterValue": "192.168.0.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet2CIDR",
+    "ParameterValue": "192.168.32.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet3CIDR",
+    "ParameterValue": "192.168.64.0/19"
+  },
+  {
+    "ParameterKey": "PrivateSubnet1Tag1",
+    "ParameterValue": "Name=GI-OCP-private-subnet-1"
+  },
+  {
+    "ParameterKey": "PrivateSubnet2Tag1",
+    "ParameterValue": "Name=GI-OCP-private-subnet-2"
+  },
+  {
+    "ParameterKey": "PrivateSubnet3Tag1",
+    "ParameterValue": "Name=GI-OCP-private-subnet-3"
+  },
+  {
+    "ParameterKey": "PublicSubnet1CIDR",
+    "ParameterValue": "192.168.96.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet1Tag1",
+    "ParameterValue": "Name=GI-OCP-public-subnet-1"
+  },
+  {
+    "ParameterKey": "PublicSubnet2CIDR",
+    "ParameterValue": "192.168.104.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet2Tag1",
+    "ParameterValue": "Name=GI-OCP-public-subnet-2"
+  },
+  {
+    "ParameterKey": "PublicSubnet3CIDR",
+    "ParameterValue": "192.168.112.0/21"
+  },
+  {
+    "ParameterKey": "PublicSubnet3Tag1",
+    "ParameterValue": "Name=GI-OCP-public-subnet-3"
+  },
+  {
+    "ParameterKey": "VPCCIDR",
+    "ParameterValue": "192.168.0.0/16"
+  },
+  {
+    "ParameterKey": "VPCDNSNameResolution",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "ELBOptions",
+    "ParameterValue": "internet-facing"
+  }
+]
