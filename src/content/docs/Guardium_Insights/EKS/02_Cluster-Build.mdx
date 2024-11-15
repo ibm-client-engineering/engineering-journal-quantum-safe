@@ -1434,7 +1434,7 @@ kubectl get csv cloud-native-postgresql.v1.18.12 -w
 When it appears, run the following:
 
 ```tsx
-kubectl get csv cloud-native-postgresql.v1.18.12 -o yaml | egrep -v "generation:|resourceVersion:" | sed -E "s/cp.icr.io|\bicr.io/$myprivatereg/" > cloud-native-postgresql.v1.18.12-patch.yaml
+kubectl get csv cloud-native-postgresql.v1.18.12 -o yaml | egrep -v "generation:|resourceVersion:" | sed -E "s/cp.icr.io|\bicr.io/$myprivatereg/" | sed -e '/^status:/,$ d' > cloud-native-postgresql.v1.18.12-patch.yaml
 ```
 
 Patch the CSV
