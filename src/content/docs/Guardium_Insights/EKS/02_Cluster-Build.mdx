@@ -734,7 +734,7 @@ EOF
 {/**/}
 :::note[On Ingresses]
 
-If you plan on using AWS ALB for ingress, follow the directions [here](../04_optional_services/#optional-install-the-alb-ingress-controller)
+If you plan on using AWS ALB for ingress, follow the directions [here](../../../guardium_insights/04_optional_services/#optional-install-the-alb-ingress-controller)
 
 :::
 Let's install the NGINX helm chart
@@ -1319,6 +1319,7 @@ Run the following `ibm-pak` command to install the Foundational Services catalog
 
 This assumes you've mirrored all required GI and CPFS images to your private registry.
 
+
 Set the following vars:
 
 ```tsx
@@ -1329,7 +1330,10 @@ Else set it to
 ```tsx
 export ARGS="--registry icr.io --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
+:::
 
+:::caution[Required for Air Gapped installations]
+You will need to install the **[Gatekeeper OPA](../../../guardium_insights/04_optional_services/#configure-security-constraints-optional)** AND **[configure mutations](../../../guardium_insights/04_optional_services/#configure-opa-mutations)** if using a private registry!
 :::
 
 ```tsx
@@ -1363,8 +1367,12 @@ Else set it this to use the public and entitled registries:
 ```tsx
 export ARGS="--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry cp.icr.io --user ${CP_REPO_USER} --pass ${CP_REPO_PASS} --secret ibm-entitlement-key --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
-
 :::
+
+:::caution[Required for Air Gapped installations]
+You will need to install the **[Gatekeeper OPA](../../../guardium_insights/04_optional_services/#configure-security-constraints-optional)** AND **[configure mutations](../../../guardium_insights/04_optional_services/#configure-opa-mutations)** if using a private registry!
+:::
+
 
 ```tsx
 oc ibm-pak launch $CASE_NAME \
@@ -1374,17 +1382,6 @@ oc ibm-pak launch $CASE_NAME \
    --namespace $NAMESPACE \
    --args "$ARGS"
 ```
-
-:::note
-It seems sometimes the above command will fail waiting for the `platform-oidc-credentials` to be created. It might mean that the common-services operator needs to be bounced or that you might need to wait between running commands. If it fails on that error, run the following:
-
-```tsx
-kubectl scale deploy ibm-common-service-operator --replicas=0
-kubectl scale deploy ibm-common-service-operator --replicas=1
-```
-
-Then re-run the `oc ibm-pak launch` command once the operator is back up.
-:::
 
 This may take a little while to run.
 
@@ -1636,3 +1633,4 @@ kubectl get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_passw
 This will return the password for the `cpadmin` user. You can then use `cpadmin` to login.
 
 ![Webui](../../../../assets/images/webui01.png)
+

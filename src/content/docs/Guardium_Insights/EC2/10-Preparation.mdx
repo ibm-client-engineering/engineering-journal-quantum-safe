@@ -242,7 +242,13 @@ This will allow you to troubleshoot in the event that the stack does not complet
 :::
 
 ```
-aws cloudformation deploy --stack-name stack-deployment-1 --template-file cluster.yml --parameter-overrides file://parameters-override.yaml --capabilities CAPABILITY_NAMED_IAM --tags *add Key=Value tag here* --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
+aws cloudformation deploy \
+--stack-name stack-deployment-1 \
+--template-file cluster.yaml \
+--parameter-overrides file://parameters-override.json \
+--capabilities CAPABILITY_NAMED_IAM \
+--tags *add Key=Value tag here* \
+--role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
 ```
 
 Check the AWS Console to see when the cloudformation template has progressed far enough that the bootnode is online.

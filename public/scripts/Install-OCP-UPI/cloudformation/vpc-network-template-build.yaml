@@ -1,0 +1,1380 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template is modified from the original and will create a VPC and Network for installing an Openshift Cluster in EC2.
+Metadata:
+  QuickStartDocumentation:
+    EntrypointName: Launch a New VPC
+    OptionalParameters:
+      - PrivateSubnet1Tag1
+      - PrivateSubnet1Tag2
+      - PrivateSubnet1Tag3
+      - PrivateSubnet2Tag1
+      - PrivateSubnet2Tag2
+      - PrivateSubnet2Tag3
+      - PrivateSubnet3Tag1
+      - PrivateSubnet3Tag2
+      - PrivateSubnet3Tag3
+      - PublicSubnet1Tag1
+      - PublicSubnet1Tag2
+      - PublicSubnet1Tag3
+      - PublicSubnet2Tag1
+      - PublicSubnet2Tag2
+      - PublicSubnet2Tag3
+      - PublicSubnet3Tag1
+      - PublicSubnet3Tag2
+      - PublicSubnet3Tag3
+Parameters:
+  ClusterName:
+    Description: Custom cluster name.
+    Type: String
+  InfrastructureName:
+    Description: A short, unique cluster ID used to tag cloud resources and identify items owned or used by the cluster.
+    Type: String
+  RhcosAmi:
+    Description: Current Red Hat Enterprise Linux CoreOS AMI to use for bootstrap.
+    Type: AWS::EC2::Image::Id
+    Default: ami-09a50cc0693e3a489
+  AllowedBootstrapSshCidr:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|1[0-9]|2[0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/0-32.
+    Default: 10.0.0.0/8
+    Description: CIDR block allowed to access the bootstrap node via SSH.
+    Type: String
+  HostedZoneName:
+    Description: The Route53 zone to register the targets with, such as example.com. Omit the trailing period.
+    Type: String
+    Default: frwd-labs.link
+  AvailabilityZones:
+    Description: 'List of Availability Zones to use for the subnets in the VPC. Note: The logical order is preserved.'
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  PrivateSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.0.0/19
+    Description: CIDR block for private subnet 1A located in Availability Zone 1
+    Type: String
+  PrivateSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.32.0/19
+    Description: CIDR block for private subnet 2A located in Availability Zone 2
+    Type: String
+  PrivateSubnet3CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.64.0/19
+    Description: CIDR block for private subnet 3A located in Availability Zone 3
+    Type: String
+  PrivateSubnet1Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: Network=Private
+    Description: tag to add to private subnets A, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet1Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to private subnets A, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet1Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to private subnets A, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet2Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: Network=Private
+    Description: tag to add to private subnets B, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet2Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to private subnets B, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet2Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to private subnets B, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet3Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: Network=Private
+    Description: tag to add to private subnets B, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet3Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to private subnets B, in format Key=Value (Optional)
+    Type: String
+  PrivateSubnet3Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Type: String
+  PublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.96.0/21
+    Description: CIDR block for the public DMZ subnet 1 located in Availability Zone 1
+    Type: String
+  PublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.104.0/20
+    Description: CIDR block for the public DMZ subnet 2 located in Availability Zone 2
+    Type: String
+  PublicSubnet3CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.112.0/21
+    Description: CIDR block for the public DMZ subnet 3 located in Availability Zone 3
+    Type: String
+  PublicSubnet1Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: Network=Public
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet1Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet1Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet2Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet2Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet2Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet3Tag1:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet3Tag2:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  PublicSubnet3Tag3:
+    AllowedPattern: ^([a-zA-Z0-9+\-._:/@]+=[a-zA-Z0-9+\-.,_:/@ *\\"'\[\]\{\}]*)?$
+    ConstraintDescription: tags must be in format "Key=Value" keys can only contain [a-zA-Z0-9+\-._:/@], values can contain [a-zA-Z0-9+\-._:/@ *\\"'\[\]\{\}]
+    Default: ''
+    Description: tag to add to public subnets, in format Key=Value (Optional)
+    Type: String
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 192.168.0.0/16
+    Description: CIDR block for the VPC
+    Type: String
+  VPCTenancy:
+    AllowedValues:
+      - default
+      - dedicated
+    Default: default
+    Description: The allowed tenancy of instances launched into the VPC
+    Type: String
+  VPCDNSNameResolution:
+    AllowedValues:
+      - true
+      - false
+    Default: false
+    Description: Indicates whether DNS resolution is supported for the VPC
+    Type: String
+  VPCDNSNameCreation:
+    AllowedValues:
+      - true
+      - false
+    Default: false
+    Description: Indicates that instances spun up in the VPC get dns resolvable hostnames
+    Type: String
+  ELBOptions:
+    AllowedValues:
+      - internet-facing
+      - internal
+    Default: internet-facing
+    Description: Indicates whether your created ELB is internal only or internet-facing
+    Type: String
+  BootstrapIgnitionLocation:
+    Default: s3://my-s3-bucket/bootstrap.ign
+    Description: Ignition config file location.
+    Type: String
+Conditions:
+  NVirginiaRegionCondition: !Equals
+    - !Ref AWS::Region
+    - us-east-1
+  PrivateSubnet1Tag1Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet1Tag1
+      - ''
+  PrivateSubnet1Tag2Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet1Tag2
+      - ''
+  PrivateSubnet1Tag3Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet1Tag3
+      - ''
+  PrivateSubnet2Tag1Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet2Tag1
+      - ''
+  PrivateSubnet2Tag2Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet2Tag2
+      - ''
+  PrivateSubnet2Tag3Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet2Tag3
+      - ''
+  PrivateSubnet3Tag1Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet3Tag1
+      - ''
+  PrivateSubnet3Tag2Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet3Tag2
+      - ''
+  PrivateSubnet3Tag3Condition: !Not
+    - !Equals
+      - !Ref PrivateSubnet3Tag3
+      - ''
+  PublicSubnet1Tag1Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet1Tag1
+      - ''
+  PublicSubnet1Tag2Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet1Tag2
+      - ''
+  PublicSubnet1Tag3Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet1Tag3
+      - ''
+  PublicSubnet2Tag1Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet2Tag1
+      - ''
+  PublicSubnet2Tag2Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet2Tag2
+      - ''
+  PublicSubnet2Tag3Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet2Tag3
+      - ''
+  PublicSubnet3Tag1Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet3Tag1
+      - ''
+  PublicSubnet3Tag2Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet3Tag2
+      - ''
+  PublicSubnet3Tag3Condition: !Not
+    - !Equals
+      - !Ref PublicSubnet3Tag3
+      - ''
+Resources:
+  DHCPOptions:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainName: !If
+        - NVirginiaRegionCondition
+        - ec2.internal
+        - !Sub ${AWS::Region}.compute.internal
+      DomainNameServers:
+        - AmazonProvidedDNS
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      InstanceTenancy: !Ref VPCTenancy
+      EnableDnsSupport: !Ref VPCDNSNameResolution
+      EnableDnsHostnames: !Ref VPCDNSNameCreation
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+  VPCDHCPOptionsAssociation:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      VpcId: !Ref VPC
+      DhcpOptionsId: !Ref DHCPOptions
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: Name
+          Value: Private subnet 1
+        - !If
+          - PrivateSubnet1Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet1Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet1Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet1Tag3
+          - !Ref AWS::NoValue
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      AvailabilityZone: !Select
+        - '1'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+        - Key: Name
+          Value: Private subnet 2
+        - !If
+          - PrivateSubnet2Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet2Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet2Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet2Tag3
+          - !Ref AWS::NoValue
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet3CIDR
+      AvailabilityZone: !Select
+        - '2'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+        - Key: Name
+          Value: Private subnet 3
+        - !If
+          - PrivateSubnet3Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet3Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PrivateSubnet3Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PrivateSubnet3Tag3
+          - !Ref AWS::NoValue
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1CIDR
+      AvailabilityZone: !Select
+        - '0'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: kubernetes.io/role/elb
+          Value: 1
+        - Key: Name
+          Value: Public subnet 1
+        - !If
+          - PublicSubnet1Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet1Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet1Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet1Tag3
+          - !Ref AWS::NoValue
+      MapPublicIpOnLaunch: true
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2CIDR
+      AvailabilityZone: !Select
+        - '1'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: kubernetes.io/role/elb
+          Value: 1
+        - Key: Name
+          Value: Public subnet 2
+        - !If
+          - PublicSubnet2Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet2Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet2Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet2Tag3
+          - !Ref AWS::NoValue
+      MapPublicIpOnLaunch: true
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet3CIDR
+      AvailabilityZone: !Select
+        - '2'
+        - !Ref AvailabilityZones
+      Tags:
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: shared
+        - Key: kubernetes.io/role/elb
+          Value: 1
+        - Key: Name
+          Value: Public subnet 3
+        - !If
+          - PublicSubnet3Tag1Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag1
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag1
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet3Tag2Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag2
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag2
+          - !Ref AWS::NoValue
+        - !If
+          - PublicSubnet3Tag3Condition
+          - Key: !Select
+              - '0'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag3
+            Value: !Select
+              - '1'
+              - !Split
+                - '='
+                - !Ref PublicSubnet3Tag3
+          - !Ref AWS::NoValue
+      MapPublicIpOnLaunch: true
+  PrivateSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private subnet 1
+        - Key: Network
+          Value: Private
+  PrivateSubnet1Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway1
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+  PrivateSubnet2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private subnet 2
+        - Key: Network
+          Value: Private
+  PrivateSubnet2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+  PrivateSubnet3RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private subnet 3
+        - Key: Network
+          Value: Private
+  PrivateSubnet3Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet3RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway3
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet3
+      RouteTableId: !Ref PrivateSubnet3RouteTable
+  PublicSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public Subnets
+        - Key: Network
+          Value: Public
+  PublicSubnetRoute:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicSubnetRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicSubnetRouteTable
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicSubnetRouteTable
+  PublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicSubnetRouteTable
+  NAT1EIP:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NAT2EIP:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NAT3EIP:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NATGateway1:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NAT1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+  NATGateway2:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NAT2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+  NATGateway3:
+    DependsOn: VPCGatewayAttachment
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NAT3EIP.AllocationId
+      SubnetId: !Ref PublicSubnet3
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action: '*'
+            Effect: Allow
+            Resource: '*'
+            Principal: '*'
+      RouteTableIds:
+        - !Ref PrivateSubnet1RouteTable
+        - !Ref PrivateSubnet2RouteTable
+        - !Ref PrivateSubnet3RouteTable
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPC
+  IntApiElb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Join
+        - '-'
+        - - !Ref InfrastructureName
+          - int
+      Scheme: !Ref ELBOptions
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+        - !Ref PrivateSubnet3
+      Type: network
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterName}-elb
+  InternalHttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InternalHttpTargetGroup
+      LoadBalancerArn: !Ref IntApiElb
+      Port: 80
+      Protocol: TCP
+  InternalHttpTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPort: 80
+      HealthCheckProtocol: TCP
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Port: 80
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+  InternalHttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InternalHttpsTargetGroup
+      LoadBalancerArn: !Ref IntApiElb
+      Port: 443
+      Protocol: TCP
+  InternalHttpsTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPort: 443
+      HealthCheckProtocol: TCP
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Port: 443
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+  InternalApiListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InternalApiTargetGroup
+      LoadBalancerArn: !Ref IntApiElb
+      Port: 6443
+      Protocol: TCP
+  InternalApiTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /readyz
+      HealthCheckPort: 6443
+      HealthCheckProtocol: HTTPS
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Port: 6443
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+  InternalServiceInternalListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InternalServiceTargetGroup
+      LoadBalancerArn: !Ref IntApiElb
+      Port: 22623
+      Protocol: TCP
+  InternalServiceTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /healthz
+      HealthCheckPort: 22623
+      HealthCheckProtocol: HTTPS
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Port: 22623
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+  MasterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster Master Security Group
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 0
+          ToPort: 0
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          ToPort: 6443
+          FromPort: 6443
+          CidrIp: 10.0.0.0/8
+        - IpProtocol: tcp
+          FromPort: 22623
+          ToPort: 22623
+          CidrIp: !Ref VPCCIDR
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 65335
+          CidrIp: 10.0.0.0/8
+      VpcId: !Ref VPC
+  WorkerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster Worker Security Group
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 0
+          ToPort: 0
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref VPCCIDR
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 10.0.0.0/8
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/8
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 10.0.0.0/8
+      VpcId: !Ref VPC
+  MasterIngressEtcd:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: etcd
+      FromPort: 2379
+      ToPort: 2380
+      IpProtocol: tcp
+  MasterIngressVxlan:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Vxlan packets
+      FromPort: 4789
+      ToPort: 4789
+      IpProtocol: udp
+  MasterIngressWorkerVxlan:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Vxlan packets
+      FromPort: 4789
+      ToPort: 4789
+      IpProtocol: udp
+  MasterIngressGeneve:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Geneve packets
+      FromPort: 6081
+      ToPort: 6081
+      IpProtocol: udp
+  MasterIngressWorkerGeneve:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Geneve packets
+      FromPort: 6081
+      ToPort: 6081
+      IpProtocol: udp
+  MasterIngressInternal:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: tcp
+  MasterIngressWorkerInternal:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: tcp
+  MasterIngressInternalUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: udp
+  MasterIngressWorkerInternalUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: udp
+  MasterIngressKube:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Kubernetes kubelet, scheduler and controller manager
+      FromPort: 10250
+      ToPort: 10259
+      IpProtocol: tcp
+  MasterIngressWorkerKube:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes kubelet, scheduler and controller manager
+      FromPort: 10250
+      ToPort: 10259
+      IpProtocol: tcp
+  MasterIngressIngressServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: tcp
+  MasterIngressWorkerIngressServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: tcp
+  MasterIngressIngressServicesUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: udp
+  MasterIngressWorkerIngressServicesUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt MasterSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: udp
+  WorkerIngressVxlan:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Vxlan packets
+      FromPort: 4789
+      ToPort: 4789
+      IpProtocol: udp
+  WorkerIngressMasterVxlan:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Vxlan packets
+      FromPort: 4789
+      ToPort: 4789
+      IpProtocol: udp
+  WorkerIngressGeneve:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Geneve packets
+      FromPort: 6081
+      ToPort: 6081
+      IpProtocol: udp
+  WorkerIngressMasterGeneve:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Geneve packets
+      FromPort: 6081
+      ToPort: 6081
+      IpProtocol: udp
+  WorkerIngressInternal:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: tcp
+  WorkerIngressMasterInternal:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: tcp
+  WorkerIngressInternalUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: udp
+  WorkerIngressMasterInternalUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Internal cluster communication
+      FromPort: 9000
+      ToPort: 9999
+      IpProtocol: udp
+  WorkerIngressKube:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes secure kubelet port
+      FromPort: 10250
+      ToPort: 10250
+      IpProtocol: tcp
+  WorkerIngressWorkerKube:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Internal Kubernetes communication
+      FromPort: 10250
+      ToPort: 10250
+      IpProtocol: tcp
+  WorkerIngressIngressServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: tcp
+  WorkerIngressMasterIngressServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: tcp
+  WorkerIngressIngressServicesUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt WorkerSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: udp
+  WorkerIngressMasterIngressServicesUDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WorkerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
+      Description: Kubernetes ingress services
+      FromPort: 30000
+      ToPort: 32767
+      IpProtocol: udp
+Outputs:
+  NAT1EIP:
+    Description: NAT 1 IP address
+    Value: !Ref NAT1EIP
+    Export:
+      Name: !Sub ${AWS::StackName}-NAT1EIP
+  NAT2EIP:
+    Description: NAT 2 IP address
+    Value: !Ref NAT2EIP
+    Export:
+      Name: !Sub ${AWS::StackName}-NAT2EIP
+  NAT3EIP:
+    Description: NAT 3 IP address
+    Value: !Ref NAT3EIP
+    Export:
+      Name: !Sub ${AWS::StackName}-NAT3EIP
+  PrivateSubnet1CIDR:
+    Description: Private subnet 1 CIDR in Availability Zone 1
+    Value: !Ref PrivateSubnet1CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1ACIDR
+  PrivateSubnet1ID:
+    Description: Private subnet 1 ID in Availability Zone 1
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1ID
+  PrivateSubnet2CIDR:
+    Description: Private subnet 2 CIDR in Availability Zone 2
+    Value: !Ref PrivateSubnet2CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2CIDR
+  PrivateSubnet2ID:
+    Description: Private subnet 2 ID in Availability Zone 2
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2ID
+  PrivateSubnet3CIDR:
+    Description: Private subnet 3 CIDR in Availability Zone 3
+    Value: !Ref PrivateSubnet3CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet3CIDR
+  PrivateSubnet3ID:
+    Description: Private subnet 3 ID in Availability Zone 3
+    Value: !Ref PrivateSubnet3
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet3ID
+  PublicSubnet1CIDR:
+    Description: Public subnet 1 CIDR in Availability Zone 1
+    Value: !Ref PublicSubnet1CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet1CIDR
+  PublicSubnet1ID:
+    Description: Public subnet 1 ID in Availability Zone 1
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet1ID
+  PublicSubnet2CIDR:
+    Description: Public subnet 2 CIDR in Availability Zone 2
+    Value: !Ref PublicSubnet2CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet2CIDR
+  PublicSubnet2ID:
+    Description: Public subnet 2 ID in Availability Zone 2
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet2ID
+  PublicSubnet3CIDR:
+    Description: Public subnet 3 CIDR in Availability Zone 3
+    Value: !Ref PublicSubnet3CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet3CIDR
+  PublicSubnet3ID:
+    Description: Public subnet 3 ID in Availability Zone 3
+    Value: !Ref PublicSubnet3
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet3ID
+  S3VPCEndpoint:
+    Description: S3 VPC Endpoint
+    Value: !Ref S3VPCEndpoint
+    Export:
+      Name: !Sub ${AWS::StackName}-S3VPCEndpoint
+  PrivateSubnet1RouteTable:
+    Value: !Ref PrivateSubnet1RouteTable
+    Description: Private subnet 1 route table
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1RouteTable
+  PrivateSubnet2RouteTable:
+    Value: !Ref PrivateSubnet2RouteTable
+    Description: Private subnet 2 route table
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2RouteTable
+  PrivateSubnet3RouteTable:
+    Value: !Ref PrivateSubnet3RouteTable
+    Description: Private subnet 3 route table
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet3RouteTable
+  PublicSubnetRouteTable:
+    Value: !Ref PublicSubnetRouteTable
+    Description: Public subnet route table
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnetRouteTable
+  VPCCIDR:
+    Value: !Ref VPCCIDR
+    Description: VPC CIDR
+    Export:
+      Name: !Sub ${AWS::StackName}-VPCCIDR
+  VPCID:
+    Value: !Ref VPC
+    Description: VPC ID
+    Export:
+      Name: !Sub ${AWS::StackName}-VPCID
+  InternalApiLoadBalancerName:
+    Description: Full name of the internal API load balancer.
+    Value: !GetAtt IntApiElb.LoadBalancerFullName
+  InternalApiLoadBalancerDNSName:
+    Description: Full name of the internal API load balancer.
+    Value: !GetAtt IntApiElb.DNSName
+  ApiServerDnsName:
+    Description: Full hostname of the API server, which is required for the Ignition config files.
+    Value: !Join
+      - .
+      - - api-int
+        - !Ref ClusterName
+        - !Ref HostedZoneName
+  InternalApiTargetGroupArn:
+    Description: ARN of the internal API target group.
+    Value: !Ref InternalApiTargetGroup
+  InternalServiceTargetGroupArn:
+    Description: ARN of the internal service target group.
+    Value: !Ref InternalServiceTargetGroup
+  InternalHttpsTargetGroupArn:
+    Description: ARN of the external https target group.
+    Value: !Ref InternalHttpsTargetGroup
+  InternalHttpTargetGroupArn:
+    Description: ARN of the external http target group.
+    Value: !Ref InternalHttpTargetGroup
+  MasterSecurityGroupId:
+    Description: Master Security Group ID
+    Value: !GetAtt MasterSecurityGroup.GroupId
+  WorkerSecurityGroupId:
+    Description: Worker Security Group ID
+    Value: !GetAtt WorkerSecurityGroup.GroupId
