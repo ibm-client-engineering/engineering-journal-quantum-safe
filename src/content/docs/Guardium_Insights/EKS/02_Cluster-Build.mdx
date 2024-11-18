@@ -1017,6 +1017,11 @@ kubectl config set-context --current --namespace $NAMESPACE
 
 ## Install the IBM Cert Manager
 
+:::note[On Cert Managers]
+
+If you cannot use the IBM Cert Manager, follow the directions [here](../../../guardium_insights/04_optional_services/#installing-community-cert-manager)
+:::
+
 If you followed the directions [here](../01_pre-reqs/#downloading-the-case-file) you should have the `ibm-guardium-insights` case file downloaded and extracted.
 
 Change to the following directory
@@ -1317,13 +1322,16 @@ Run the following `ibm-pak` command to install the Foundational Services catalog
 
 :::note[Private Registries for Catalog Sources]
 
-This assumes you've mirrored all required GI and CPFS images to your private registry.
+This assumes you've mirrored all required GI and CPFS images to your private registry. Export your private registry as an env var (my.registry.io is an example.)
 
+```tsx
+export myprivatereg=my.registry.io
+```
 
 Set the following vars:
 
 ```tsx
-export ARGS="--registry your.private.reg --recursive --inputDir ${LOCAL_CASE_DIR}"
+export ARGS="--registry ${myprivatereg} --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
 
 Else set it to
@@ -1355,13 +1363,16 @@ Now run the following `ibm-pak` command to install the Foundational Services ope
 
 :::note[Private Registries for Foundational Services Operators]
 
-This assumes you've mirrored all required GI and CPFS images to your private registry.
+This assumes you've mirrored all required GI and CPFS images to your private registry and exported the `$myprivatereg` as an env var.
 
 Set the following vars:
 
 ```tsx
-export ARGS="--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry your.private.reg --user yourprivreguser --pass yourprivateregpass --secret yoursecretkey --recursive --inputDir ${LOCAL_CASE_DIR}"
+export ARGS="--size ${ICS_SIZE} --ks_flag true --hostname ${HOSTNAME} --registry ${myprivatereg} --user yourprivreguser --pass yourprivateregpass --secret yoursecretkey --recursive --inputDir ${LOCAL_CASE_DIR}"
 ```
+
+omit `--user, --pass, --secret` if you did not set these on your private repo.
+
 
 Else set it this to use the public and entitled registries:
 ```tsx
@@ -1382,6 +1393,59 @@ oc ibm-pak launch $CASE_NAME \
    --namespace $NAMESPACE \
    --args "$ARGS"
 ```
+
+:::note[Airgapping CPFS extras]
+
+If you are performing an airgapped install, you must perform the following steps:
+
+After kicking off the `install-operator` above, open another terminal and export your private registry as an env var (my.registry.io is an example). 
+
+```tsx
+export myprivatereg=my.registry.io
+```
+
+Now wait for the `cloud-native-postgreql-image-list` config map to be created.
+
+```tsx
+kubectl get cm cloud-native-postgresql-image-list -w
+
+NAME                                 DATA   AGE
+cloud-native-postgresql-image-list   6      25h
+```
+
+When it appears, run the following
+
+```tsx
+kubectl get cm cloud-native-postgresql-image-list -o yaml | sed -E "s/cp.icr.io|\bicr.io/$myprivatereg/" > cloud-native-postgresql-image-list-patch.yaml
+```
+
+Then patch the config map.
+
+```tsx
+kubectl patch cm cloud-native-postgresql-image-list --patch-file cloud-native-postgresql-image-list-patch.yaml
+```
+
+Now wait for the `cloud-native-postgresql.v1.18.12` `ClusterServiceVersion` to be created
+
+```tsx
+kubectl get csv cloud-native-postgresql.v1.18.12 -w
+```
+
+When it appears, run the following:
+
+```tsx
+kubectl get csv cloud-native-postgresql.v1.18.12 -o yaml | egrep -v "generation:|resourceVersion:" | sed -E "s/cp.icr.io|\bicr.io/$myprivatereg/" | sed -e '/^status:/,$ d' > cloud-native-postgresql.v1.18.12-patch.yaml
+```
+
+Patch the CSV
+
+```tsx
+kubectl patch csv cloud-native-postgresql.v1.18.12 --type merge --patch-file cloud-native-postgresql.v1.18.12-patch.yaml
+```
+
+Now you can return to your previous terminal to wait for the installation to complete.
+
+:::
 
 This may take a little while to run.
 
