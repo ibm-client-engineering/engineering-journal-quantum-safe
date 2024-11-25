@@ -12,6 +12,8 @@ Metadata:
           default: Networking
         Parameters:
           - VPCID
+          - HostedZoneID
+          - MachineCidr
           - PrivateSubnet1ID
           - PrivateSubnet2ID
           - PrivateSubnet3ID
@@ -48,7 +50,7 @@ Metadata:
           default: Openshift Configuration
         Parameters:
           - LicenseAgreement
-          - CPDExternalRegistry
+          - GIExternalRegistry
       - Label: 
           default: Services
         Parameters:
@@ -132,6 +134,14 @@ Parameters:
     Description: The ID of your existing VPC for deployment.
     Type: AWS::EC2::VPC::Id
     Default: vpc-03738f32953df603f
+  HostedZoneID:
+    Description: The ID of your existing private hosted zone for the VPC.
+    Type: String
+    Default: REPLACE_ME
+  MachineCidr:
+    Description: The CIDR of the existing VPC
+    Type: String
+    Default: REPLACE_ME
   MasterInstanceType:
     Default: m6i.xlarge
     AllowedValues:
@@ -262,7 +272,7 @@ Parameters:
       - I agree
       - '-'
     ConstraintDescription: must answer 'I agree'
-  CPDExternalRegistry:
+  GIExternalRegistry:
     Description: URL to external registry for CPD install. CPD images must already exist in the repo
     Type: String
     Default: "cp.icr.io"
@@ -499,58 +509,59 @@ Parameters:
       - "removed"
     Default: "removed"
 
+# RHEL AMI - https://access.redhat.com/solutions/15356
 Mappings:
   AWSAMIRegionMap:
     us-east-1:
-      BootNodeAmiId: ami-06640050dc3f556bb
+      BootNodeAmiId: ami-0c41531b8d18cc72b
       COREOSAmiId: ami-0b35795bcab04ee70
     us-east-2:
-      BootNodeAmiId: ami-092b43193629811af
+      BootNodeAmiId: ami-078cbc4c2d057c244
       COREOSAmiId: ami-0c17b13bb8b268411
     us-west-1:
-      BootNodeAmiId: ami-0186e3fec9b0283ee
+      BootNodeAmiId: ami-0fa0ed170a59f4917
       COREOSAmiId: ami-004de02e4e2bba5f2
     us-west-2:
-      BootNodeAmiId: ami-08970fb2e5767e3b8
+      BootNodeAmiId: ami-04a616933df665b44
       COREOSAmiId: ami-0237df7fc4ba6a5cc
     ap-south-1:
-      BootNodeAmiId: ami-05c8ca4485f8b138a
+      BootNodeAmiId: ami-063d0d3250553f017
       COREOSAmiId: ami-02b81ab6d01174430
     ap-northeast-3:
-      BootNodeAmiId: ami-044921b7897a7e0da
+      BootNodeAmiId: ami-088c289c3f07fa115
       COREOSAmiId: ami-03450c8fc4ff0f7bd
     ap-northeast-2:
-      BootNodeAmiId: ami-06c568b08b5a431d5
+      BootNodeAmiId: ami-000847072b0b35502
       COREOSAmiId: ami-087c3504f536820f8
     ap-southeast-1:
-      BootNodeAmiId: ami-051f0947e420652a9
+      BootNodeAmiId: ami-07a79552200256856
       COREOSAmiId: ami-099b3006ba35122c6
     ap-southeast-2:
-      BootNodeAmiId: ami-0808460885ff81045
+      BootNodeAmiId: ami-0fe791c0ace58322c
       COREOSAmiId: ami-04d9e06d3edd4b78c
     ap-northeast-1:
-      BootNodeAmiId: ami-0f903fb156f24adbf
+      BootNodeAmiId: ami-0b74caa65e36e4b38
       COREOSAmiId: ami-04a04d42202f5dffb
     ca-central-1:
-      BootNodeAmiId: ami-0c3d3a230b9668c02
+      BootNodeAmiId: ami-0c23a35603e3d8ba4
       COREOSAmiId: ami-0712dffd5af06d6a0
     eu-central-1:
-      BootNodeAmiId: ami-0e7e134863fac4946
+      BootNodeAmiId: ami-025d24108be0a614c
       COREOSAmiId: ami-0b911f8bcf1f05a47
     eu-west-1:
-      BootNodeAmiId: ami-0f0f1c02e5e4d9d9f
+      BootNodeAmiId: ami-028f9616b17ba1d53
       COREOSAmiId: ami-0cd860942047eaf85
     eu-west-2:
-      BootNodeAmiId: ami-035c5dc086849b5de
+      BootNodeAmiId: ami-03628db51da52eeaa
       COREOSAmiId: ami-057df328de60ac464
     eu-west-3:
-      BootNodeAmiId: ami-0460bf124812bebfa
+      BootNodeAmiId: ami-0b6b7402cc4708282
       COREOSAmiId: ami-0e57008c4a59dbf99
     eu-north-1:
-      BootNodeAmiId: ami-06a2a41d455060f8b
+      BootNodeAmiId: ami-0cd776c8201793f81
       COREOSAmiId: ami-06c6466f9944aee66
     sa-east-1:
-      BootNodeAmiId: ami-0c1b8b886626f940c
+      BootNodeAmiId: ami-03f8004d2ba700e6c
       COREOSAmiId: ami-01e07e22429c5bdef
     ap-east-1:
       BootNodeAmiId: ami-011a403f2a9b2c39f
@@ -790,7 +801,7 @@ Resources:
           - |
             #!/bin/bash -x
             
-            #Added the next 5 lines to include required tools for the installation of CP4D
+            #Added the next 5 lines to include required tools for the installation
             yum update
             yum install -y git podman wget jq python39 unzip
             podman version
@@ -862,44 +873,6 @@ Resources:
             aws s3 cp ${RedhatPullSecret} .
             sudo cp -r ./pull*.json /tmp/ocp_pullsecret.json
 
-
-            # copy openshift and CP4D config file to config dir
-            # wget https://ibm-aws-immersion-day.s3.us-east-2.amazonaws.com/cloudformation/config/cp4d-480.yaml
-            # cp ./cp4d-480.yaml $HOME/cpd-config/config/
-
-            # replace parameters in CPD
-            # sed -i 's/|CA|/'${CA}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|CDE|/'${CDE}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|DB2|/'${DB2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|DB2U|/'${DB2U}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|DMC|/'${DMC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|DV|/'${DV}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|FACTSHEET|/'${FACTSHEET}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONASSISTANT|/'${WatsonAssistant}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONDISCOVERY|/'${WatsonDiscovery}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONKNOWLEDGESTUDIO|/'${WatsonKnowledgeStudio}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONOPENSCALE|/'${OpenScale}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONSPEECH|/'${WatsonSpeech}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WKC|/'${WKC}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WML|/'${WML}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WSL|/'${WSL}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WSP|/'${WSP}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|RSTUDIO|/'${RSTUDIO}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|OPENPAGES|/'${OPENPAGES}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|WATSONXDATA|/'${WatsonxData}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-
-            # watsonx AI
-            # sed -i 's/|WATSONXAI|/'${WatsonxAI}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|GOOGLEFLANT5XXL|/'${GoogleFlanT5Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|GOOGLEFLANUL2|/'${GoogleFlanUl2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|ELEUTHERAIGPTNEOX20B|/'${EleutheraiGptNeox20b}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|IBMGRANITE13BCHATV1|/'${IBMGranite13bChatV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|IBMGRANITE13BINSTRUCTV1|/'${IBMGranite13bInstructV1}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|METALLAMALLAMA270BCHAT|/'${MetaLlamaLlamaTwo70bChat}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|IBMMPT7BINSTRUCT2|/'${IBMMpt7bInstruct2}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|BIGSCIENCEMT0XXL|/'${BigscienceMt0Xxl}'/g' $HOME/cpd-config/config/cp4d-480.yaml
-            # sed -i 's/|BIGCODESTARCODER|/'${BigcodeStarcoder}'/g' $HOME/cpd-config/config/cp4d-480.yaml            
-
             cat >> $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml<< EOF
             ---
             global_config:
@@ -928,21 +901,17 @@ Resources:
                 multi_zone: False
                 private_only: False
                 # CIDR of OpenShift nodes when deploying in existing VPC
-                machine_cidr: 10.2.1.0/24
+                machine_cidr:
                 # Existing subnets when deploying in existing VPC
                 subnet_ids:
-                - subnet-06bbef28f585a0dd3
-                - subnet-0ea5ac344c0fbadf5
-                hosted_zone_id: Z08291873MCIC4TMIK4UP
-                # Optional attribute if you want to use a different AWS AMI to boot the OpenShift nodes
-                ami_id: ami-09249dd86b1933dd5
+                hosted_zone_id:
               gpu:
-                install: auto
+                install: False
               openshift_ai:
-                install: auto
+                install: False
                 channel: auto
               mcg:
-                install: True
+                install: False
                 storage_type: storage-class
                 storage_class: gp3-csi
               openshift_storage:
@@ -969,6 +938,8 @@ Resources:
             yq -i ".openshift[0].infrastructure.credentials_mode = \"Manual\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             yq -i ".openshift[0].infrastructure.multi_zone = ${MultiAZ}" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             yq -i ".openshift[0].infrastructure.private_only = ${PrivateCluster}" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
+            yq -i ".openshift[0].infrastructure.hosted_zone_id = \"${HostedZoneID}\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
+            yq -i ".openshift[0].infrastructure.machine_cidr = \"${MachineCidr}\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
 
             if [ "${MultiAZ}" == "True" ]; then
               if [ "${PrivateCluster}" == "True" ]; then
@@ -996,18 +967,6 @@ Resources:
               yq -i ".openshift[0].openshift_storage[0].ocs_storage_size_gb = 512" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             fi
 
-            if [ "${WatsonxAI}" == "installed" ]; then
-              yq -i ".openshift[0].gpu.install = True" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
-            else
-              yq -i ".openshift[0].gpu.install = False" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
-            fi
-
-            if [[ ${WatsonAssistant} == "installed" ||  ${WatsonDiscovery} == "installed" ]]; then
-              yq -i ".openshift[0].mcg.install = True" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
-            else
-              yq -i ".openshift[0].mcg.install = False" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
-            fi
-            
             yq -i ".openshift[0].mcg.storage_type = \"storage-class\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
             yq -i ".openshift[0].mcg.storage_class = \"gp3-csi\"" $HOME/cpd-config/config/ocp-aws-self-managed-existing-vpc.yaml
 
@@ -1113,11 +1072,11 @@ Resources:
       Runtime: python3.8
       Timeout: 600
              
-  Cleanup :
-    Type: Custom::Cleanup
-    Properties:
-      DependsOn: BootnodeInstance
-      ServiceToken: !GetAtt 'CleanUpLambda.Arn'
+  # Cleanup :
+  #   Type: Custom::Cleanup
+  #   Properties:
+  #     DependsOn: BootnodeInstance
+  #     ServiceToken: !GetAtt 'CleanUpLambda.Arn'
  
   ICPDInstallationCompletedHandle:
     Type: AWS::CloudFormation::WaitConditionHandle  
