@@ -59,9 +59,25 @@ export default defineConfig({
         }
       },{
         label: 'Guardium Insights',
-        autogenerate: {
-          directory: 'Guardium_Insights'
-        }
+        items: [
+          {
+            label: 'EC2',
+            items: [
+              {
+                label: 'Prerequisites',
+                link: 'guardium_insights/ec2/05-prerequisites/'
+              },{
+                label: 'Preparation',
+                link: 'guardium_insights/ec2/10-preparation/'
+              }
+            ],
+          },{
+            label: 'EKS',
+            autogenerate: {
+              directory: 'Guardium_Insights/EKS'
+            }
+          }
+        ],
       },{
         label: 'Reference',
         items: [

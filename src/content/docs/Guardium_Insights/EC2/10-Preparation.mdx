@@ -43,7 +43,7 @@ Rename the file from ```pull-secret.txt``` to ```pull-secret.json```
 
 ```
 # name must be unique in region
-BUCKET="bucket-name"
+BUCKET="bucket-customer-date"
 aws s3api create-bucket --bucket $BUCKET --region us-east-1
 ```
 
@@ -90,8 +90,20 @@ Review ***parameters-override.yaml***, the following changes will need to be mad
 - Add VPC ID
 - Add Bucket Name for s3 bucket that is being used by Red Hat Pull secret
 - Add Domain Name
+- Add Hosted Zone ID for Private Hosted Zone associated with VPC
 - Add Cluster Name
 - Add GI External Registry
+
+### Hosted Zones
+
+If you require both public and private access, then create both a private and public hosted zone. The private hosted zone
+should be associated with the VPC and the private hosted zone ID should be configured in the `parameters-override.yaml` file.
+
+
+The public hosted zone should be a child of the registered domain name in use. For example, if the registered domain name is
+`frwd-labs.link`, then the public hosted zone should be at `guardium.frwd-labs.link` and that is the `DomainName` that is
+specified in `parameters-override.yaml`.
+
 
 ## Deployment Steps
 
@@ -236,11 +248,16 @@ aws cloudformation create-stack \
 
 Using the OCPInstall role arn, run the following command to start the main cloudformation deployment:
 
+:::tip
+If you are developing, add `--disable-rollback` flag to the following command to disable the automatic rollback and deletion of the bastion node on failures.
+This will allow you to troubleshoot in the event that the stack does not complete successfully.
+:::
+
 ```
 aws cloudformation deploy \
 --stack-name stack-deployment-1 \
 --template-file cluster.yaml \
---parameter-overrides file://parameters-override.json \
+--parameter-overrides file://parameters-override.yaml \
 --capabilities CAPABILITY_NAMED_IAM \
 --tags *add Key=Value tag here* \
 --role-arn arn:aws:iam::<ACCOUNT>:role/OCPInstall
@@ -248,7 +265,19 @@ aws cloudformation deploy \
 
 Check the AWS Console to see when the cloudformation template has progressed far enough that the bootnode is online.
 
-Using the ssh key from the Key Pair name used in parameters-override.yaml, ssh to the bootnode.
+Using the ssh key from the Key Pair name used in parameters-override.yaml, ssh to the bootnode. The status of the install
+will be found in the log files under `~ec2-user/cpd-status/logs`.
+
+:::tip
+If the install fails but some resources were already created, some clean up might be required in addition to deleting the stack.
+Find and delete the following before running the installation again.
+
+- DNS A records on the hosted Zones
+- EC2 instances (control plane and worker nodes)
+- EC2 load balancers
+- EFS file systems
+:::
+
 
 
 ### Monitoring
@@ -367,7 +396,7 @@ aws: error: the following arguments are required: command
 Check what folders exist in the ec2-home directory. if "cpd-status" has not been created yet, then wait a few minutes. Once "cpd-status" directory appears, run the following command:
 
 ```
-tail -f ~/cpd-status/log/cloud-pak-deployer
+tail -f ~/cpd-status/log/cloud-pak-deployer.log
 ```
 
 This command will show the log file from the cp-deployer process. 

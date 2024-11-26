@@ -88,7 +88,7 @@
         "ParameterValue": "I agree"
     },
     {
-        "ParameterKey": "CPDExternalRegistry",
+        "ParameterKey": "GIExternalRegistry",
         "ParameterValue": "cp.icr.io"
     },
     {

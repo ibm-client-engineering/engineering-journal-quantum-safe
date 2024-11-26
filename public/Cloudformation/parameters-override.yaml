@@ -1,47 +1,55 @@
 [
     {
         "ParameterKey": "APIKey",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_CP_ICR_IO_KEY"
     },
     {
         "ParameterKey": "KeyPairName",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_LOCAL_KEY_PAIR_NAME"
     },
     {
         "ParameterKey": "PrivateSubnet1ID",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "PrivateSubnet2ID",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "PrivateSubnet3ID",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "PublicSubnet1ID",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "PublicSubnet2ID",
-        "ParameterValue": "sREPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "PublicSubnet3ID",
-        "ParameterValue": "REPLACE_ME"
+        "ParameterValue": "REPLACE_ME_WITH_SUBNET_ID"
     },
     {
         "ParameterKey": "BootNodeAccessCIDR",
         "ParameterValue": "0.0.0.0/0"
     },
     {
-        "ParameterKey": "Redhat-Pull-Secret",
-        "ParameterValue": "s3://bucket-fidelity-20241107/pull-secrets/pull-secret.json"
+        "ParameterKey": "RedhatPullSecret",
+        "ParameterValue": "s3://bucket-customer-20241107/pull-secrets/pull-secret.json"
     },
     {
         "ParameterKey": "VPCID",
         "ParameterValue": "REPLACE_ME"
+    },
+    {
+        "ParameterKey": "HostedZoneID",
+        "ParameterValue": "REPLACE_ME"
+    },
+    {
+        "ParameterKey": "MachineCidr",
+        "ParameterValue": "10.0.0.0/16"
     },
     {
         "ParameterKey": "GIDeploymentLogsBucketName",

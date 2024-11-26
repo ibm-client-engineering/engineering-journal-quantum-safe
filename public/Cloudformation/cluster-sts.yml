@@ -43,7 +43,7 @@ Metadata:
           default: Openshift Configuration
         Parameters:
           - LicenseAgreement
-          - CPDExternalRegistry
+          - GIExternalRegistry
       - Label: 
           default: Openshift IAM configuration
         Parameters:
@@ -249,7 +249,7 @@ Parameters:
       - I agree
       - '-'
     ConstraintDescription: must answer 'I agree'
-  CPDExternalRegistry:
+  GIExternalRegistry:
     Description: URL to external registry for CPD install. CPD images must already exist in the repo
     Type: String
     Default: "cp.icr.io"
