@@ -3,6 +3,8 @@ title: Configuration
 description: QSR Adaptive Proxy Configuration and Usage
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 :::note
 Useful links:
 
@@ -34,7 +36,7 @@ The adaptive proxy configuration consists of the following files:
 
 ## Example setup
 
-### Build a test site with Astro and Starlight
+### Build a test site
 
 Some of the below was pulled out of [How To Create a Self-Signed SSL Certificate for Apache in Ubuntu 16.04](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-in-ubuntu-16-04)
 
@@ -42,7 +44,7 @@ Some of the below was pulled out of [How To Create a Self-Signed SSL Certificate
 
 On our Linux host (Ubuntu 24.0.4 LTS), let's install httpd and npm, install corepack, enable yarn, and configure the firewall.
 
-```tsx
+```
 sudo apt update
 
 sudo apt-get -y install apache2
@@ -58,7 +60,7 @@ sudo corepack enable
 
 Enable `mod_ssl` with the `a2enmod` command:
 
-```tsx
+```
 sudo a2enmod ssl
 ```
 
@@ -71,7 +73,7 @@ sudo systemctl restart apache2
 
 Create the SSL key and certificate files with the openssl command:
 
-```tsx
+```
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
 ```
 
@@ -88,9 +90,43 @@ Email Address []:webmaster@example.com
 
 #### Build the test site
 
+You can build a basic Hello World site or a more complex test site using Astro.
+
+<Tabs syncKey="TestSite">
+<TabItem label="Hello World">
+
+Now let's build a basic Hello World page for Apache.
+
+Create a directory to act as the document root.
+
+```
+sudo mkdir -p /var/www/html/test-app/build
+```
+
+Open a new `index.html` file with your text editor.
+
+```
+sudo vi /var/www/html/test-app/build/index.html
+```
+
+Paste the following into the blank file:
+
+```html
+<h1>Hello world!</h1>
+```
+
+</TabItem>
+<TabItem label="Astro with Starlight">
+
 Now let's build an Astro site with a Starlight template.
 
-```tsx
+:::note[Internet access]
+The following requires access to various public websites. If you are using a proxy 
+that is restrictive, you may run into connection issues.
+:::
+
+
+```
 sudo yarn create astro --install --no-git --typescript relaxed --template starlight /var/www/html/test-app
 ```
 
@@ -132,18 +168,25 @@ export default defineConfig({
 ```
 Now run the build
 
-```tsx
+```
 sudo yarn build
 
 ```
 
 This will build a viable site in `/var/www/html/test-app/build`
+</TabItem>
+</Tabs>
 
 #### Update apache config
 
 Create a file called `/etc/apache2/sites-available/test-site.conf`
 
-Since we're running this in IBM Fyre, we're going to use the FQDN of our host here.
+```
+sudo vi /etc/apache2/sites-available/test-site.conf
+```
+
+Since we're running this in IBM Fyre (private cloud), we're going to use the FQDN of our host here.
+But please use your own host name here that was used to create the self-signed certificate above.
 
 ```apache
 Listen 8080
@@ -160,14 +203,14 @@ Listen 8080
 
 Enable the new config
 
-```tsx
+```
 cd /etc/apache2/sites-enabled
 
 sudo ln -s ../sites-available/test-site.conf
 ```
 
 Now restart apache2
-```tsx
+```
 sudo systemctl restart apache2
 
 ```
@@ -175,6 +218,11 @@ sudo systemctl restart apache2
 Verify the site is now up by navigating to https://apache-host01.fyre.ibm.com:8080.
 
 ![QSRAP-config1](../../../../assets/images/QSRAP-config1.png)
+
+:::note
+If you created the "Hello world" test site then you will see a simple site that says "Hello world!"
+instead of the "Welcome to Starlight" page shown above.
+:::
 
 We set our test site to port 8080.
 
@@ -217,7 +265,7 @@ location ^~ / {
 
 Start up the adaptive proxy
 
-```tsx
+```
 cd /opt/adaptive-proxy/workdir
 
 ./runAdaptiveProxyServer.sh
@@ -226,6 +274,11 @@ cd /opt/adaptive-proxy/workdir
 Proxy should come up and our test site should be available now
 
 ![QSRAP-config2](../../../../assets/images/QSRAP-config2.png)
+
+:::note
+If you created the "Hello world" test site then you will see a simple site that says "Hello world!"
+instead of the "Welcome to Starlight" page shown above.
+:::
 
 In our case, we're pointing the proxy_pass to the FQDN virtual host we configured on our web server.
 
@@ -244,6 +297,11 @@ Our apache host is `apache-host01.fyre.ibm.com`
 :::
 
 ### Verifying the encryption algorithms
+
+:::note
+If you created the "Hello world" test site then you will see a simple site that says "Hello world!"
+instead of the "Welcome to Starlight" page shown above, but the instructions will be the same.
+:::
 
 Now that our site is up and proxied, let's verify that it's using a Quantum Safe algorithm for encryption.
 
