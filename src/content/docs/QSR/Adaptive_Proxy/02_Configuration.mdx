@@ -25,6 +25,20 @@ clients are connecting to a legacy encrypted application or site.
 
 For configuration instructions, see [Enable Post Quantum Cryptography Support in Web Browsers](https://evertrust.io/education/enable-post-quantum-cryptography-support-in-web-browsers/)
 
+:::note
+As of Dec 2024, only Chromium-based browsers work in the kyber encrypted front end scenario. Use Chrome (properly configured)
+for kyber encrypted client connection to the Adaptive Proxy and use Firefox for a legacy encrypted client connection.
+:::
+
+### Configuring Chrome
+
+For quantum-safe kyber encryption through the Adaptive Proxy, you must disable the use of ML-KEM in TLS 1.3 in Chrome.
+In a chrome tab, open `chrome://flags` and look for "Use ML-KEM in TLS 1.3". Select "Disabled" and relaunch the browser.
+
+![41f0f37b-b4dc-4e59-a894-2b7d102a7574](https://github.com/user-attachments/assets/30c87d59-5b8b-471f-b55c-d09ac37aa4a7)
+
+The "TLS 1.3 post-quantum key agreement" flag can remain "Default", as default enables that flag in Chrome.
+
 ## Adaptive proxy configuration
 
 The adaptive proxy configuration consists of the following files:
