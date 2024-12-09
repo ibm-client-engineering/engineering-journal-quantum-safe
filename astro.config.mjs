@@ -76,6 +76,14 @@ export default defineConfig({
             autogenerate: {
               directory: 'Guardium_Insights/EKS'
             }
+          },
+          {
+            label: 'Guardium Insights Installation',
+            link: 'guardium_insights/03_gi-install/'
+          },
+          {
+            label: 'Optional Services',
+            link: 'guardium_insights/04_optional_services/'
           }
         ],
       },{
